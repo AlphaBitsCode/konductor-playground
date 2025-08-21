@@ -4,11 +4,12 @@ import { ClientResponseError } from "pocketbase";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const comments = await pb.collection("comments").getList(1, 50, {
-      filter: `post = "${params.id}"`,
+      filter: `post = "${id}"`,
       expand: "user,replies,replies.user",
       sort: "created",
     });
@@ -30,13 +31,14 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const comment = await pb.collection("comments").create({
       ...body,
-      post: params.id,
+      post: id,
     });
 
     return NextResponse.json(comment, { status: 201 });
