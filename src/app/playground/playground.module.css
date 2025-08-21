@@ -1,0 +1,227 @@
+.playgroundContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #1a1a2e;
+  font-family: var(--font-press-start-2p), 'Press Start 2P', cursive, monospace;
+  image-rendering: pixelated;
+  color: white;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.topBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 1rem;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-bottom: 4px solid #4a4a4a;
+}
+
+.logo {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.metrics {
+  display: flex;
+  gap: 2rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 2px solid #4a4a4a;
+}
+
+.metricItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.gameWorld {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-image: url('/pixel-art/brick1.png');
+  background-size: 64px 64px;
+  background-repeat: repeat;
+  overflow: hidden;
+  background-blend-mode: overlay;
+  background-color: orange;
+}
+
+.gameWorld::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/pixel-art/brick1.png');
+  background-size: 64px 64px;
+  opacity: 0.7;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+.characterArea {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+  text-align: center;
+}
+
+.character {
+  width: 64px;
+  height: 64px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+  position: relative;
+  z-index: 2;
+  transition: transform 0.2s ease-in-out;
+}
+
+.character:hover {
+  transform: scale(1.1) translateY(-5px);
+}
+
+.mainCharacter {
+  width: 80px;
+  height: 80px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+  position: relative;
+  z-index: 3;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 0, 0.7));
+  animation: float 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) translateX(-50%); }
+  50% { transform: translateY(-10px) translateX(-50%); }
+}
+
+.characterLabel {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  margin-top: 0.5rem;
+  white-space: nowrap;
+  text-shadow: 1px 1px 1px #000;
+  z-index: 1;
+  border: 2px solid #4a4a4a;
+}
+
+.characterStats {
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #a0e0a0;
+  padding: 0.3rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.6rem;
+  margin-top: 0.3rem;
+  border: 1px solid #4a4a4a;
+}
+
+.bottomBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-top: 4px solid #4a4a4a;
+  z-index: 100;
+}
+
+.actionButton {
+  padding: 0.8rem 1.5rem;
+  background: linear-gradient(145deg, #4a90e2, #357abd);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 0 #2a5a8f;
+  transition: all 0.1s ease;
+}
+
+.actionButton:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #2a5a8f;
+}
+
+.controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.controlButton {
+  width: 3rem;
+  height: 3rem;
+  background-color: #4a4a4a;
+  border: 2px solid #666;
+  border-radius: 6px;
+  color: white;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.controlButton:active {
+  background-color: #666;
+  transform: scale(0.95);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .metrics {
+    gap: 1rem;
+  }
+  
+  .metricItem {
+    font-size: 0.7rem;
+  }
+  
+  .character {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .mainCharacter {
+    width: 64px;
+    height: 64px;
+  }
+  
+  .characterLabel, .characterStats {
+    font-size: 0.6rem;
+    padding: 0.2rem 0.5rem;
+  }
+}

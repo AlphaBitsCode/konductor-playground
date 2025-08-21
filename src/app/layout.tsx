@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Jersey_25 } from "next/font/google";
+import { Press_Start_2P } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,8 +20,15 @@ const jersey25 = Jersey_25({
   weight: "400"
 });
 
+const pressStart2P = Press_Start_2P({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-press-start-2p',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://beta.konductor.ai'),
   title: "Konductor.ai - AI-First ERP Platform",
   description: "Konductor.ai is an AI orchestration platform that helps you manage and deploy your AI Minions.",
   openGraph: {
@@ -45,7 +53,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${jersey25.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${jersey25.variable} ${pressStart2P.variable} antialiased`}
       >
         {children}
       </body>
