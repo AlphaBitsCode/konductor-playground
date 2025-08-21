@@ -196,7 +196,7 @@ export const WalkingCharacter = ({ scrollY, totalSections }: WalkingCharacterPro
             }}
             data-color={speechBubble.color}
           >
-            <span className="text-[18px] sm:text-[15px] font-jersey">{speechBubble.text}</span>
+            <span className="text-[18px] sm:text-[16px] font-jersey">{speechBubble.text}</span>
           </div>
         )}
       </div>
