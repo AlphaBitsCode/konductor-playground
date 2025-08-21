@@ -22,32 +22,41 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.7);
-  border-bottom: 4px solid #4a4a4a;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
 .logo {
   font-size: 1.2rem;
   font-weight: bold;
   color: #fff;
-  text-transform: uppercase;
   letter-spacing: 2px;
+  height: 40px;
+  width: auto;
 }
 
 .metrics {
   display: flex;
   gap: 2rem;
-  background-color: rgba(0, 0, 0, 0.5);
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: 2px solid #4a4a4a;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  padding: 0.5rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .metricItem {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .gameWorld {
@@ -59,7 +68,7 @@
   background-repeat: repeat;
   overflow: hidden;
   background-blend-mode: overlay;
-  background-color: orange;
+  background-color: rgba(255, 166, 0, 0.607);
 }
 
 .gameWorld::before {
@@ -71,7 +80,7 @@
   bottom: 0;
   background-image: url('/pixel-art/brick1.png');
   background-size: 64px 64px;
-  opacity: 0.7;
+  opacity: 0.1;
   pointer-events: none;
   mix-blend-mode: overlay;
 }
@@ -151,53 +160,75 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.7);
-  border-top: 4px solid #4a4a4a;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.1);
   z-index: 100;
 }
 
-.actionButton {
-  padding: 0.8rem 1.5rem;
-  background: linear-gradient(145deg, #4a90e2, #357abd);
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-family: inherit;
-  font-size: 0.9rem;
-  cursor: pointer;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
-  box-shadow: 0 4px 0 #2a5a8f;
-  transition: all 0.1s ease;
-}
-
-.actionButton:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 #2a5a8f;
-}
-
-.controls {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.controlButton {
-  width: 3rem;
-  height: 3rem;
-  background-color: #4a4a4a;
-  border: 2px solid #666;
-  border-radius: 6px;
-  color: white;
-  font-size: 1.2rem;
+.aiAvatar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.1s ease;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.controlButton:active {
-  background-color: #666;
-  transform: scale(0.95);
+.hologram {
+  width: 40px;
+  height: 40px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 0 10px rgba(100, 200, 255, 0.7));
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+.aiStatus {
+  font-size: 0.8rem;
+  color: #a0e0ff;
+  text-shadow: 0 0 5px rgba(100, 200, 255, 0.5);
+}
+
+.newsTicker {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  margin: 0 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.newsItem {
+  display: inline-block;
+  padding: 0 2rem;
+  font-size: 0.85rem;
+  color: #fff;
+  animation: ticker 20s linear infinite;
+}
+
+@keyframes ticker {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.controls, .controlButton, .actionButton {
+  display: none;
 }
 
 /* Responsive adjustments */
