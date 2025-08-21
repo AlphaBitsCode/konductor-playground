@@ -8,7 +8,6 @@ export default async function Page() {
 
   const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
   const isBeta = hostname === "beta.konductor.ai";
-  const isApex = hostname === "konductor.ai";
 
   if (isLocal || isBeta) {
     return <LandingPage />;

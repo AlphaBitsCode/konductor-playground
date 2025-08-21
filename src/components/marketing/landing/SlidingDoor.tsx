@@ -1,20 +1,19 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type SlidingDoorProps = {
   scrollY: number;
-  totalSections: number;
 };
 
-export const SlidingDoor = ({ scrollY, totalSections: _totalSections }: SlidingDoorProps) => {
+export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
   const [doorPosition, setDoorPosition] = useState(100); // Start completely hidden (100% = fully below screen)
   const [totalPageHeight, setTotalPageHeight] = useState(0);
   const doorRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
 
   // Calculate when the character is approaching the bottom
-  const animateDoor = () => {
+  const animateDoor = useCallback(() => {
     if (doorRef.current) {
       const scrollProgress = totalPageHeight > 0 ? Math.min(scrollY / totalPageHeight, 1) : 0;
 
@@ -39,7 +38,7 @@ export const SlidingDoor = ({ scrollY, totalSections: _totalSections }: SlidingD
     }
 
     animationFrameRef.current = requestAnimationFrame(animateDoor);
-  };
+  }, [scrollY, totalPageHeight]);
 
   // Animation loop
   useEffect(() => {
@@ -50,7 +49,7 @@ export const SlidingDoor = ({ scrollY, totalSections: _totalSections }: SlidingD
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [scrollY, totalPageHeight]);
+  }, [animateDoor]);
 
   // Calculate total page height
   useEffect(() => {
