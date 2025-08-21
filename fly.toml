@@ -9,7 +9,7 @@ primary_region = 'sea'
 [build]
 
 [env]
-NEXT_PUBLIC_POCKETBASE_URL = 'https://pocket-watcher.fly.dev:8091'
+NEXT_PUBLIC_POCKETBASE_URL = 'https://pb.konductor.ai'
 PORT = '3000'
 
 [[mounts]]

@@ -11,7 +11,7 @@ services:
     volumes:
       - pb_data:/pb/pb_data
     environment:
-      - NEXT_PUBLIC_POCKETBASE_URL=http://localhost:8090
+      - NEXT_PUBLIC_POCKETBASE_URL="https://pb.konductor.ai"
 
 volumes:
   pb_data:
