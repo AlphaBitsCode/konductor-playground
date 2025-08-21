@@ -20,6 +20,7 @@ const jersey25 = Jersey_25({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: "Konductor.ai - AI-First ERP Platform",
   description: "Konductor.ai is an AI orchestration platform that helps you manage and deploy your AI Minions.",
   openGraph: {
