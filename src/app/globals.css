@@ -73,4 +73,5 @@ body {
 
 .font-jersey {
   font-family: var(--font-jersey-25), sans-serif;
+  font-size: 1.5em;
 }

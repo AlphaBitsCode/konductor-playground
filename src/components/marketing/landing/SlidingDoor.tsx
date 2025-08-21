@@ -318,13 +318,6 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
             );
           pointer-events: none;
         }
-        
-        /* Pixelated rendering for retro aesthetic */
-        * {
-          image-rendering: pixelated;
-          image-rendering: -moz-crisp-edges;
-          image-rendering: crisp-edges;
-        }
       `}
       </style>
     </div>

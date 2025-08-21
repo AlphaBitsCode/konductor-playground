@@ -88,7 +88,6 @@ export function TeaserPage() {
             height={240}
             className="mx-auto pixel-art select-none"
             draggable={false}
-            style={{ imageRendering: 'pixelated' }}
           />
         </div>
 

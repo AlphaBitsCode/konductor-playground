@@ -84,9 +84,9 @@ export const HeroSection = () => {
               AI-First ERP Platform
             </span>
           </h1>
-          <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+          <p className="font-jersey text-gray-300 text-lg md:text-2xl max-w-2xl mx-auto leading-relaxed">
             This is the future of work, an immersive pixelart interface
-            where AI Minions help you get things done, so you can spend more time with your family.
+            where AI&nbsp;Minions help you get things done.
           </p>
         </div>
 

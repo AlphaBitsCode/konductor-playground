@@ -146,7 +146,7 @@ export const DepartmentSection = ({ department, index, isFirst }: DepartmentSect
               </div>
             </div>
 
-            <p className="text-gray-300 text-sm sm:text-base lg:text-lg xl:text-xl leading-relaxed">
+            <p className="text-gray-300 sm:text-md lg:text-lg xl:text-xl leading-relaxed font-jersey">
               {department.description}
             </p>
           </div>
@@ -157,9 +157,9 @@ export const DepartmentSection = ({ department, index, isFirst }: DepartmentSect
               <div key={idx} className="glassmorphism p-2 sm:p-3 lg:p-4 rounded-lg">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center space-x-2">
-                    <span className="font-['Press_Start_2P'] text-xs sm:text-sm text-white">{item.label}</span>
+                    <span className="font-['Press_Start_2P'] text-xs sm:text-sm text-white font-jersey">{item.label}</span>
                   </div>
-                  <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 whitespace-nowrap">
+                  <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 whitespace-nowrap font-jersey">
                     {item.metric}
                   </span>
                 </div>
@@ -195,19 +195,19 @@ export const DepartmentSection = ({ department, index, isFirst }: DepartmentSect
               {/* Floating UI Elements */}
               <div className="absolute top-8 left-8">
                 <div className="glassmorphism px-3 py-2 rounded border border-cyan-400">
-                  <span className="font-['Press_Start_2P'] text-xs text-cyan-400">AI Active</span>
+                  <span className="font-['Press_Start_2P'] text-xs text-cyan-400 font-jersey">AI Active</span>
                 </div>
               </div>
 
               <div className="absolute top-8 right-8">
                 <div className="glassmorphism px-3 py-2 rounded border border-green-400">
-                  <span className="font-['Press_Start_2P'] text-xs text-green-400">Online</span>
+                  <span className="font-['Press_Start_2P'] text-xs text-green-400 font-jersey">Online</span>
                 </div>
               </div>
 
               <div className="absolute bottom-8 left-8">
                 <div className="glassmorphism px-3 py-2 rounded border border-purple-400">
-                  <span className="font-['Press_Start_2P'] text-xs text-purple-400">{`Efficiency: ${efficiency.toFixed(1)}%`}</span>
+                  <span className="font-['Press_Start_2P'] text-xs text-purple-400 font-jersey">{`Efficiency: ${efficiency.toFixed(1)}%`}</span>
                 </div>
               </div>
 

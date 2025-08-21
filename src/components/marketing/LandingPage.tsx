@@ -85,9 +85,6 @@ export const LandingPage = () => {
         
         .pixel-font {
           font-family: 'Press Start 2P', monospace;
-          image-rendering: pixelated;
-          image-rendering: -moz-crisp-edges;
-          image-rendering: crisp-edges;
           line-height: 1.4;
         }
         
