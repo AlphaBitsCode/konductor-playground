@@ -285,6 +285,26 @@
       },
       {
         "hidden": false,
+        "id": "select302938475",
+        "maxSelect": 1,
+        "name": "status",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "select",
+        "values": ["waitlist"]
+      },
+      {
+        "hidden": false,
+        "id": "json302938476",
+        "name": "meta",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "json"
+      },
+      {
+        "hidden": false,
         "id": "autodate2990389176",
         "name": "created",
         "onCreate": true,
