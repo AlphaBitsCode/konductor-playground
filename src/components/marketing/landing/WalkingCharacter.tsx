@@ -174,7 +174,7 @@ export const WalkingCharacter = ({ scrollY, totalSections }: WalkingCharacterPro
       >
         {/* Character Sprite */}
         <div
-          className={`character-sprite ${isWalking ? 'idle' : 'idle'}`}
+          className={`character-sprite ${isWalking ? 'walking' : 'idle'}`}
           style={{
             backgroundImage: 'url("/avatars/avatar1.png")',
             backgroundPosition: '0 0',
@@ -196,7 +196,7 @@ export const WalkingCharacter = ({ scrollY, totalSections }: WalkingCharacterPro
             }}
             data-color={speechBubble.color}
           >
-            <span className="pixel-font text-[10px] mobile:text-[8px]">{speechBubble.text}</span>
+            <span className="pixel-font text-[8px] sm:text-[10px]">{speechBubble.text}</span>
           </div>
         )}
       </div>
@@ -219,21 +219,20 @@ export const WalkingCharacter = ({ scrollY, totalSections }: WalkingCharacterPro
         }
         
         .character-sprite.walking {
-          animation: walk-cycle 0.6s steps(4, end) infinite;
+          /* Subtle jitter to simulate movement with a static image */
+          animation: walk-jitter 0.2s linear infinite alternate;
         }
-        
+
+        /* No idle animation: stays centered when not walking */
         .character-sprite.idle {
-          animation: idle-bob 2s ease-in-out infinite;
+          animation: none;
+          transform: translate3d(0, 0, 0);
         }
-        
-        @keyframes walk-cycle {
-          from { background-position-x: 0; }
-          to { background-position-x: -72px; }
-        }
-        
-        @keyframes idle-bob {
-          0%, 100% { transform: translate3d(0, 0, 0); }
-          50% { transform: translate3d(0, -2px, 0); }
+
+        /* Jitter by ±1px vertically */
+        @keyframes walk-jitter {
+          from { transform: translate3d(0, -1px, 0); }
+          to { transform: translate3d(0, 1px, 0); }
         }
         
         /* Desktop sizes for shadow and speech bubble */
@@ -280,15 +279,7 @@ export const WalkingCharacter = ({ scrollY, totalSections }: WalkingCharacterPro
             background-size: 36px 47px;
           }
           
-          @keyframes walk-cycle {
-            from { background-position-x: 0; }
-            to { background-position-x: -36px; }
-          }
-          
-          @keyframes idle-bob {
-            0%, 100% { transform: translate3d(0, 0, 0); }
-            50% { transform: translate3d(0, -1px, 0); }
-          }
+          /* Mobile keeps the same jitter scale */
           
           .character-shadow {
             bottom: -2px;

@@ -197,7 +197,7 @@ export const LandingPage = () => {
       <WalkingCharacter scrollY={scrollY} totalSections={7} />
 
       {/* Sliding Door - Appears at bottom when character approaches */}
-      <SlidingDoor scrollY={scrollY} totalSections={7} />
+      <SlidingDoor scrollY={scrollY} />
 
       {/* Hero Section */}
       <HeroSection />
