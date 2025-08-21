@@ -17,7 +17,7 @@ export default function LoginForm() {
     async (_: ActionResult, formData: FormData) => {
       return await login(formData);
     },
-    initialState
+    initialState,
   );
 
   // Redirect on success
@@ -38,7 +38,7 @@ export default function LoginForm() {
           priority
         />
       </div>
-      
+
       <div className="flex mb-6">
         <Link
           href="/login"
