@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pb from '@/lib/pocketbase';
-import PocketBase, { ClientResponseError } from 'pocketbase';
+import PocketBase, { ClientResponseError, RecordModel } from 'pocketbase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +20,17 @@ export async function POST(request: NextRequest) {
     const password = generatePassword().slice(0, 16);
 
     let createdUserId: string | null = null;
-    let existingRecord: any | null = null;
+    interface UserMeta {
+      waitlist_number?: number;
+      [key: string]: unknown;
+    }
+
+    interface UserRecord extends RecordModel {
+      email: string;
+      status: string;
+      meta?: UserMeta;
+    }
+    let existingRecord: UserRecord | null = null;
 
     try {
       // Try to create a new user marked as waitlist
@@ -38,7 +48,7 @@ export async function POST(request: NextRequest) {
         try {
           const existing = await pb
             .collection('users')
-            .getFirstListItem(`email = "${email}"`);
+            .getFirstListItem<UserRecord>(`email = "${email}"`);
           await pb.collection('users').update(existing.id, { status: 'waitlist' });
           existingRecord = existing;
           createdUserId = existing.id;
@@ -74,12 +84,12 @@ export async function POST(request: NextRequest) {
         let currentMeta: Record<string, unknown> | undefined;
         if (existingRecord) {
           // ensure we have the latest meta for existing users
-          const fresh = await adminPb.collection('users').getOne(createdUserId);
-          currentMeta = (fresh as any).meta as Record<string, unknown> | undefined;
+          const fresh = await adminPb.collection('users').getOne<UserRecord>(createdUserId);
+          currentMeta = fresh.meta;
         }
 
         const alreadyAssigned =
-          typeof (currentMeta as any)?.waitlist_number === 'number';
+          typeof currentMeta?.waitlist_number === 'number';
 
         if (!alreadyAssigned) {
           const newMeta = { ...(currentMeta || {}), waitlist_number: totalUsers };

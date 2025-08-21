@@ -70,3 +70,7 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.font-jersey {
+  font-family: var(--font-jersey-25), sans-serif;
+}
