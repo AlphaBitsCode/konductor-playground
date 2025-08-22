@@ -68,7 +68,7 @@ export const PixelNavigation = () => {
               onClick={() => scrollToSection('signup')}
               className="pixel-button glassmorphism px-4 py-2 rounded border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-slate-900 transition-all duration-200"
             >
-              <span className="pixel-font text-sm">Get Early Access</span>
+              <span className="pixel-font text-sm">Get Ticket</span>
             </button>
           </div>
 

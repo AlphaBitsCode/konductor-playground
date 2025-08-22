@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useState } from "react";
 
 const initialState: ActionResult = {
   success: false,
@@ -12,6 +13,17 @@ const initialState: ActionResult = {
 };
 
 export default function LoginForm() {
+  const [email, setEmail] = useState(
+    process.env.NODE_ENV === 'development' 
+      ? process.env.POCKETBASE_ADMIN_EMAIL
+      : ''
+  );
+  const [password, setPassword] = useState(
+    process.env.NODE_ENV === 'development' 
+      ? process.env.POCKETBASE_ADMIN_PASSWORD
+      : ''
+  );
+
   const router = useRouter();
   const [state, formAction] = useActionState(
     async (_: ActionResult, formData: FormData) => {
@@ -73,6 +85,8 @@ export default function LoginForm() {
             name="email"
             type="email"
             required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
             placeholder="you@example.com"
           />
@@ -90,6 +104,8 @@ export default function LoginForm() {
             name="password"
             type="password"
             required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
             placeholder="••••••••"
           />

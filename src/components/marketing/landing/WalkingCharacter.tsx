@@ -5,10 +5,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 type WalkingCharacterProps = {
   scrollY: number;
   totalSections: number;
+  xPosition: number;
+  isWalking: boolean;
 };
 
-export const WalkingCharacter = ({ scrollY, totalSections }: WalkingCharacterProps) => {
-  const [isWalking, setIsWalking] = useState(false);
+export const WalkingCharacter = ({ 
+  scrollY, 
+  totalSections, 
+  xPosition,
+  isWalking 
+}: WalkingCharacterProps) => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [totalPageHeight, setTotalPageHeight] = useState(0);
   const [currentCharacterY, setCurrentCharacterY] = useState(0);
@@ -61,8 +67,7 @@ export const WalkingCharacter = ({ scrollY, totalSections }: WalkingCharacterPro
   useEffect(() => {
     const scrollDelta = Math.abs(scrollY - lastScrollY);
     if (scrollDelta > 5) {
-      setIsWalking(true);
-      const timer = setTimeout(() => setIsWalking(false), 300);
+      const timer = setTimeout(() => {}, 300);
       setLastScrollY(scrollY);
       return () => clearTimeout(timer);
     }
@@ -152,7 +157,7 @@ export const WalkingCharacter = ({ scrollY, totalSections }: WalkingCharacterPro
       case 5: // IT Department
         return { text: 'Code Minions are debugging and deploying all day', color: 'blue', opacity };
       case 6: // Locked Door
-        return { text: 'Sign up and follow me!', color: 'red', opacity: 1, locked: true };
+        return { text: 'Get a ticket and follow me!', color: 'red', opacity: 1, locked: true };
       default:
         return null;
     }
@@ -163,7 +168,12 @@ export const WalkingCharacter = ({ scrollY, totalSections }: WalkingCharacterPro
   return (
     <div
       className="fixed z-[100] pointer-events-none"
-      style={{ left: '15%' }}
+      style={{ 
+        left: `${xPosition}%`,
+        transform: 'translateX(-50%)',
+        transition: 'left 0.2s ease-out',
+        willChange: 'left',
+      }}
       ref={characterRef}
     >
       <div

@@ -116,7 +116,7 @@ export const LockedDoorSection = () => {
               <div className="space-y-4 mb-24">
                 <h2 className="pixel-font text-3xl md:text-5xl text-white mb-4">
                   <span className="bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
-                    THE PLATFORM
+                    THE PLAYGR0UND
                   </span>
                 </h2>
                 <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto">
