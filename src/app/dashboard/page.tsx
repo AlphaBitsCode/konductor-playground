@@ -4,15 +4,16 @@ import { cookies } from 'next/headers';
 import DashboardClient from './DashboardClient';
 
 export default async function Page() {
-  const cookie = cookies().get('pb_auth');
+  const cookieStore = await cookies();
+  const pbAuth = cookieStore.get('pb_auth');
   
-  if (!cookie) {
+  if (!pbAuth) {
     return <div>Not authenticated</div>;
   }
   
   let model;
   try {
-    model = JSON.parse(cookie.value).model;
+    model = JSON.parse(pbAuth.value).model;
   } catch (error) {
     console.error('Failed to parse auth cookie:', error);
     return <div>Authentication error</div>;
