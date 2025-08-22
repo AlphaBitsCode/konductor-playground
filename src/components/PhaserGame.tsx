@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 
 class GameScene extends Phaser.Scene {
     private player: Phaser.Physics.Arcade.Sprite | null = null;
