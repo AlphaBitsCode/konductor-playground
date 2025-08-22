@@ -69,7 +69,7 @@ export const SeaWithShips = () => {
       // Update ship positions
       setShips(currentShips => 
         currentShips.map(ship => {
-          let newX = ship.x + ship.speed;
+          const newX = ship.x + ship.speed;
           
           // Reset ship to left side if it goes off screen
           if (newX > windowSize.width * 1.2) {

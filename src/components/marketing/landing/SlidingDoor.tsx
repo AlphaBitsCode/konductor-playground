@@ -72,7 +72,7 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
 
   return (
     <div
-      className="fixed z-[99] pointer-events-none"
+      className="fixed z-[100] pointer-events-none"
       ref={doorRef}
       style={{
         left: '14%', // Position to the left of the walking character (which is at 15%)
@@ -99,8 +99,8 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
 
           {/* Door Sign */}
           <div className="door-sign">
-            <span className="pixel-font text-gray-300" style={{ fontSize: '7px', lineHeight: '1' }}>
-              PLAYGROUND
+            <span className="jersey-font text-gray-300" style={{ fontSize: '14px', lineHeight: '1' }}>
+              PLAYGR0UND
             </span>
           </div>
         </div>

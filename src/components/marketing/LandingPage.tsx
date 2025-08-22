@@ -191,7 +191,7 @@ export const LandingPage = () => {
       <PixelNavigation />
 
       {/* Walking Character - Fixed position that follows scroll */}
-      <WalkingCharacter scrollY={scrollY} totalSections={7} />
+      <WalkingCharacter scrollY={scrollY} xPosition={15} totalSections={7} />
 
       {/* Sliding Door - Appears at bottom when character approaches */}
       <SlidingDoor scrollY={scrollY} />

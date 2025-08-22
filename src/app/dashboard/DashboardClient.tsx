@@ -15,16 +15,16 @@ interface DashboardClientProps {
   model: {
     id: string;
     email: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
 export default function DashboardClient({ model }: DashboardClientProps) {
-  const [stats, setStats] = useState({
+  const stats = {
     tasksCompleted: 42,
     projectsActive: 7,
     teamMembers: 3,
-  });
+  };
 
   // Mock tasks data
   const [tasks] = useState([
@@ -32,6 +32,26 @@ export default function DashboardClient({ model }: DashboardClientProps) {
     { id: 2, title: 'Prepare Q3 report', status: 'pending' },
     { id: 3, title: 'Schedule team sync', status: 'completed' },
   ]);
+
+  const [scrollY, setScrollY] = useState(0);
+  const [isWalking, setIsWalking] = useState(false);
+  const totalSections = 1; // Since this is a dashboard with one main section
+  const xPosition = 25; // Position from left in percentage
+
+  // Set up scroll listener
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Toggle walking animation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsWalking(prev => !prev);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-sky-200">
@@ -42,7 +62,12 @@ export default function DashboardClient({ model }: DashboardClientProps) {
 
       {/* Walking Character */}
       <div className="absolute bottom-[33%] left-1/4 transform -translate-x-1/2 z-20">
-        <WalkingCharacter />
+        <WalkingCharacter 
+          scrollY={scrollY}
+          totalSections={totalSections}
+          xPosition={xPosition}
+          isWalking={isWalking}
+        />
       </div>
 
       {/* Sea with Ships */}

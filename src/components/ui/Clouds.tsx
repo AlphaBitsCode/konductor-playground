@@ -23,6 +23,17 @@ export const Clouds = () => {
     '/pixel-art/cloud_white2.png',
   ];
 
+  // Create a single cloud with random properties
+  const createCloud = useCallback((id: number, maxWidth: number): Cloud => ({
+    id,
+    x: maxWidth > 0 ? -100 : Math.random() * window.innerWidth * 0.5,
+    y: Math.random() * (windowSize.height * 0.1),
+    speed: 0.1 + Math.random() * 0.3,
+    scale: 0.3 + Math.random() * 0.5,
+    opacity: 0.4 + Math.random() * 0.5,
+    image: cloudImages[Math.floor(Math.random() * cloudImages.length)],
+  }), [windowSize.height, cloudImages]);
+
   // Initialize clouds
   const initClouds = useCallback(() => {
     const newClouds: Cloud[] = [];
@@ -33,18 +44,7 @@ export const Clouds = () => {
     }
     
     setClouds(newClouds);
-  }, [windowSize.width]);
-
-  // Create a single cloud with random properties
-  const createCloud = (id: number, maxWidth: number): Cloud => ({
-    id,
-    x: Math.random() * maxWidth * 0.5,
-    y: Math.random() * (windowSize.height * 0.1), // Only in top 10% of screen
-    speed: 0.1 + Math.random() * 0.3, // Slower speed for more natural movement
-    scale: 0.3 + Math.random() * 0.5, // Smaller scale for better composition
-    opacity: 0.4 + Math.random() * 0.5, // More transparent clouds
-    image: cloudImages[Math.floor(Math.random() * cloudImages.length)],
-  });
+  }, [windowSize.width, createCloud, setClouds]);
 
   // Handle window resize
   useEffect(() => {
@@ -76,7 +76,7 @@ export const Clouds = () => {
     const animate = () => {
       setClouds(currentClouds => 
         currentClouds.map(cloud => {
-          let newX = cloud.x + cloud.speed;
+          const newX = cloud.x + cloud.speed;
           
           // Reset cloud to left side if it goes off screen
           if (newX > windowSize.width) {
@@ -98,7 +98,7 @@ export const Clouds = () => {
         cancelAnimationFrame(animationId.current);
       }
     };
-  }, [clouds.length, windowSize.width]);
+  }, [clouds.length, windowSize.width, createCloud]);
 
   return (
     <div className="fixed top-0 left-0 w-full h-1/3 pointer-events-none z-0">
