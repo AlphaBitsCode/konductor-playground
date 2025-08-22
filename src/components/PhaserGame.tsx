@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import * as Phaser from 'phaser';
 
 class GameScene extends Phaser.Scene {
-    private player: Phaser.Physics.Arcade.Sprite | null = null;
+    private player: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody | null = null;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
     private map: Phaser.Tilemaps.Tilemap | null = null;
     private tileset: Phaser.Tilemaps.Tileset | null = null;
@@ -53,8 +53,24 @@ class GameScene extends Phaser.Scene {
             return;
         }
         
-        // Set up collision for the world layer
-        this.worldLayer.setCollisionByProperty({ collides: true });
+        // Set up collision for all layers that should block the player
+        // The 'collides' property is set in Tiled for tiles that should block the player
+        const collisionLayers = [this.groundLayer, this.worldLayer];
+        
+        collisionLayers.forEach(layer => {
+            if (layer) {
+                // Set collision for any tile with collides=true property
+                layer.setCollisionByProperty({ collides: true });
+                
+                // For debugging: visualize collision boxes
+                // this.physics.world.createDebugGraphic();
+                // layer.renderDebug(this.add.graphics(), {
+                //     tileColor: null,
+                //     collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200),
+                //     faceColor: new Phaser.Display.Color(40, 39, 37, 255)
+                // });
+            }
+        });
         
         // Find spawn point from the tilemap
         let spawnX = 100; // Default spawn position
@@ -94,7 +110,8 @@ class GameScene extends Phaser.Scene {
         if (this.map && this.player) {
             this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
             this.cameras.main.startFollow(this.player);
-            this.cameras.main.setZoom(1);
+            this.cameras.main.setZoom(1.5);
+            this.currentZoom = 1.5; // Update the current zoom state
             
             // Add zoom buttons
             const style = { 
@@ -119,9 +136,14 @@ class GameScene extends Phaser.Scene {
             this.cameras.main.ignore([zoomInButton, zoomOutButton]);
         }
         
-        // Set up collision between player and world layer
-        if (this.player && this.worldLayer) {
-            this.physics.add.collider(this.player, this.worldLayer);
+        // Set up collision between player and all collision layers
+        if (this.player) {
+            collisionLayers.forEach(layer => {
+                if (layer) {
+                    // The non-null assertion (!) is safe here because we've already checked this.player
+                    this.physics.add.collider(this.player!, layer);
+                }
+            });
         }
         
         // Set up keyboard input
