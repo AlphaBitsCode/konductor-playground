@@ -28,15 +28,6 @@ export default function TownPage() {
 
   return (
     <div className="relative w-screen h-screen bg-black overflow-hidden m-0 p-0" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
-      {/* Logo in top-left corner */}
-      <div className="absolute top-4 left-4 z-10 bg-black/60 p-2 rounded-lg">
-        <img 
-          src="/logos/k_logo_white.png" 
-          alt="Konductor Logo" 
-          className="h-10 w-auto"
-        />
-      </div>
-      
       {/* Game container */}
       <div className="w-full h-full m-0 p-0" style={{ width: '100vw', height: '100vh' }}>
         {isClient && <PhaserGame />}
