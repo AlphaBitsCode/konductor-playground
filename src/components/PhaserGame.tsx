@@ -79,7 +79,7 @@ class GameScene extends Phaser.Scene {
         const objects = this.map.getObjectLayer('Objects');
         if (objects) {
             const spawnPoint = objects.objects.find(obj => obj.name === 'Spawn Point');
-            if (spawnPoint) {
+            if (spawnPoint && typeof spawnPoint.x === 'number' && typeof spawnPoint.y === 'number') {
                 spawnX = spawnPoint.x;
                 spawnY = spawnPoint.y;
                 console.log(`Found spawn point at ${spawnX}, ${spawnY}`);
