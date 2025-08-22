@@ -1,0 +1,12 @@
+/* Pixel Font - Press Start 2P */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* Jersey Font - Jersey 15 */
+@import url('https://fonts.googleapis.com/css2?family=Jersey+15&display=swap');
+
+/* Apply pixel font to loading text */
+.loading-text {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+}

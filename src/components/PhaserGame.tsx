@@ -11,6 +11,10 @@ class GameScene extends Phaser.Scene {
     private groundLayer: Phaser.Tilemaps.TilemapLayer | null = null;
     private worldLayer: Phaser.Tilemaps.TilemapLayer | null = null;
     private playerSpeed: number = 175;
+    private targetPosition: { x: number, y: number } | null = null;
+    private graphics: Phaser.GameObjects.Graphics | null = null;
+    private zoomButtons: { zoomIn: Phaser.GameObjects.Text; zoomOut: Phaser.GameObjects.Text } | null = null;
+    private currentZoom: number = 1;
 
     preload() {
         // Load the map
@@ -36,12 +40,16 @@ class GameScene extends Phaser.Scene {
             return;
         }
         
-        // Create map layers
-        this.groundLayer = this.map.createLayer('Base', this.tileset, 0, 0);
-        this.worldLayer = this.map.createLayer('Objects', this.tileset, 0, 0);
+        // Create all map layers in the correct order
+        // 1. Below Player (ground, paths, etc.)
+        const belowPlayerLayer = this.map.createLayer('Below Player', this.tileset, 0, 0);
+        // 2. World layer (main ground layer)
+        this.groundLayer = this.map.createLayer('World', this.tileset, 0, 0);
+        // 3. Above Player layer (trees, objects, etc.)
+        this.worldLayer = this.map.createLayer('Above Player', this.tileset, 0, 0);
         
-        if (!this.groundLayer || !this.worldLayer) {
-            console.error('Failed to create map layers');
+        if (!belowPlayerLayer || !this.groundLayer || !this.worldLayer) {
+            console.error('Failed to create map layers. Available layers:', this.map.layers.map(l => l.name));
             return;
         }
         
@@ -68,6 +76,29 @@ class GameScene extends Phaser.Scene {
         if (this.map && this.player) {
             this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
             this.cameras.main.startFollow(this.player);
+            this.cameras.main.setZoom(1);
+            
+            // Add zoom buttons
+            const style = { 
+                font: '20px Arial', 
+                fill: '#ffffff',
+                backgroundColor: '#00000080',
+                padding: { x: 10, y: 5 }
+            };
+            
+            const zoomInButton = this.add.text(20, 20, '+', style)
+                .setInteractive()
+                .on('pointerdown', () => this.zoomCamera(0.1));
+                
+            const zoomOutButton = this.add.text(20, 60, '-', style)
+                .setInteractive()
+                .on('pointerdown', () => this.zoomCamera(-0.1));
+                
+            this.zoomButtons = { zoomIn: zoomInButton, zoomOut: zoomOutButton };
+            
+            // Make buttons stay in fixed position on screen
+            this.cameras.main.setScroll(0, 0);
+            this.cameras.main.ignore([zoomInButton, zoomOutButton]);
         }
         
         // Set up collision between player and world layer
@@ -79,40 +110,110 @@ class GameScene extends Phaser.Scene {
         if (this.input.keyboard) {
             this.cursors = this.input.keyboard.createCursorKeys();
         }
+
+        // Set up click-to-move
+        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+            if (pointer.leftButtonDown()) {
+                const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+                this.targetPosition = { x: worldPoint.x, y: worldPoint.y };
+                
+                // Draw a temporary marker at the target position
+                if (this.graphics) {
+                    this.graphics.clear();
+                    this.graphics.fillStyle(0x00ff00, 0.5);
+                    this.graphics.fillCircle(worldPoint.x, worldPoint.y, 5);
+                    this.time.delayedCall(300, () => {
+                        if (this.graphics) this.graphics.clear();
+                    });
+                }
+            }
+        });
+        
+        // Create graphics for visual feedback
+        this.graphics = this.add.graphics();
     }
 
     update() {
-        if (!this.cursors || !this.player) return;
+        if (!this.player) return;
         
         const player = this.player;
-        const left = this.cursors.left;
-        const right = this.cursors.right;
-        const up = this.cursors.up;
-        const down = this.cursors.down;
         
-        // Reset velocity
-        player.setVelocity(0);
-        
-        // Handle movement and change texture based on direction
-        if (left.isDown) {
-            player.setVelocityX(-this.playerSpeed);
-            player.setTexture('player-left');
-        } else if (right.isDown) {
-            player.setVelocityX(this.playerSpeed);
-            player.setTexture('player-right');
-        }
-        
-        if (up.isDown) {
-            player.setVelocityY(-this.playerSpeed);
-            if (!left.isDown && !right.isDown) {
-                player.setTexture('player-back');
+        // Handle click-to-move
+        if (this.targetPosition) {
+            const distance = Phaser.Math.Distance.Between(
+                player.x, 
+                player.y, 
+                this.targetPosition.x, 
+                this.targetPosition.y
+            );
+            
+            if (distance > 5) {
+                // Move towards target
+                const angle = Phaser.Math.Angle.Between(
+                    player.x, 
+                    player.y, 
+                    this.targetPosition.x, 
+                    this.targetPosition.y
+                );
+                
+                player.setVelocity(
+                    Math.cos(angle) * this.playerSpeed,
+                    Math.sin(angle) * this.playerSpeed
+                );
+                
+                // Update player texture based on direction
+                const angleDeg = Phaser.Math.RadToDeg(angle);
+                if (angleDeg > -45 && angleDeg <= 45) {
+                    player.setTexture('player-right');
+                } else if (angleDeg > 45 && angleDeg <= 135) {
+                    player.setTexture('player-front');
+                } else if (angleDeg > 135 || angleDeg <= -135) {
+                    player.setTexture('player-left');
+                } else {
+                    player.setTexture('player-back');
+                }
+            } else {
+                // Reached the target
+                player.setVelocity(0);
+                this.targetPosition = null;
             }
-        } else if (down.isDown) {
-            player.setVelocityY(this.playerSpeed);
-            if (!left.isDown && !right.isDown) {
-                player.setTexture('player-front');
+        } 
+        // Handle keyboard input if no target position
+        else if (this.cursors) {
+            const left = this.cursors.left;
+            const right = this.cursors.right;
+            const up = this.cursors.up;
+            const down = this.cursors.down;
+            
+            // Reset velocity
+            player.setVelocity(0);
+            
+            // Handle movement and change texture based on direction
+            if (left.isDown) {
+                player.setVelocityX(-this.playerSpeed);
+                player.setTexture('player-left');
+            } else if (right.isDown) {
+                player.setVelocityX(this.playerSpeed);
+                player.setTexture('player-right');
+            }
+            
+            if (up.isDown) {
+                player.setVelocityY(-this.playerSpeed);
+                if (!left.isDown && !right.isDown) {
+                    player.setTexture('player-back');
+                }
+            } else if (down.isDown) {
+                player.setVelocityY(this.playerSpeed);
+                if (!left.isDown && !right.isDown) {
+                    player.setTexture('player-front');
+                }
             }
         }
+    }
+    
+    private zoomCamera(delta: number): void {
+        this.currentZoom = Phaser.Math.Clamp(this.currentZoom + delta, 0.5, 2);
+        this.cameras.main.zoomTo(this.currentZoom, 200);
     }
 }
 
@@ -125,8 +226,8 @@ const PhaserGame: React.FC = () => {
 
         const config: Phaser.Types.Core.GameConfig = {
             type: Phaser.AUTO,
-            width: '100%',
-            height: '100%',
+            width: window.innerWidth,
+            height: window.innerHeight,
             parent: gameContainer.current,
             physics: {
                 default: 'arcade',
@@ -140,6 +241,8 @@ const PhaserGame: React.FC = () => {
             scene: [GameScene],
             scale: {
                 mode: Phaser.Scale.RESIZE,
+                width: '100%',
+                height: '100%',
                 autoCenter: Phaser.Scale.CENTER_BOTH
             }
         };
@@ -155,14 +258,37 @@ const PhaserGame: React.FC = () => {
     }, []);
 
     return (
-        <div 
-            ref={gameContainer} 
-            style={{ 
-                width: '100%', 
-                height: '100vh',
-                overflow: 'hidden'
-            }} 
-        />
+        <div className="relative w-full h-screen bg-black overflow-hidden m-0 p-0" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+          {/* Logo in top-left corner */}
+          <div className="absolute top-4 left-4 z-10 bg-black/60 p-2 rounded-lg">
+            <img 
+              src="/logos/k_logo_white.png" 
+              alt="Konductor Logo" 
+              className="h-10 w-auto"
+            />
+          </div>
+          
+          {/* Game container */}
+          <div className="w-full h-full m-0 p-0" style={{ width: '100vw', height: '100vh' }}>
+            <div 
+              ref={gameContainer} 
+              style={{ 
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100%',
+                height: '100%',
+                margin: 0,
+                padding: 0,
+                overflow: 'hidden',
+                display: 'block'
+              }} 
+              className="w-full h-full"
+            />
+          </div>
+        </div>
     );
 };
 
