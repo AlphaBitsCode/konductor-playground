@@ -56,8 +56,26 @@ class GameScene extends Phaser.Scene {
         // Set up collision for the world layer
         this.worldLayer.setCollisionByProperty({ collides: true });
         
-        // Create player
-        this.player = this.physics.add.sprite(100, 100, 'player-front');
+        // Find spawn point from the tilemap
+        let spawnX = 100; // Default spawn position
+        let spawnY = 100;
+        
+        const objects = this.map.getObjectLayer('Objects');
+        if (objects) {
+            const spawnPoint = objects.objects.find(obj => obj.name === 'Spawn Point');
+            if (spawnPoint) {
+                spawnX = spawnPoint.x;
+                spawnY = spawnPoint.y;
+                console.log(`Found spawn point at ${spawnX}, ${spawnY}`);
+            } else {
+                console.warn('Spawn Point not found in tilemap, using default position');
+            }
+        } else {
+            console.warn('Objects layer not found in tilemap, using default position');
+        }
+
+        // Create player at spawn point
+        this.player = this.physics.add.sprite(spawnX, spawnY, 'player-front');
         if (!this.player) {
             console.error('Failed to create player sprite');
             return;
