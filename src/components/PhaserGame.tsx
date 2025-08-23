@@ -15,9 +15,7 @@ class GameScene extends Phaser.Scene {
     private graphics: Phaser.GameObjects.Graphics | null = null;
     private zoomButtons: { zoomIn: Phaser.GameObjects.Text; zoomOut: Phaser.GameObjects.Text } | null = null;
     private currentZoom: number = 1;
-    private minions: Phaser.GameObjects.Sprite[] = [];
-    private selectedSlimeType: number = 1; // 1, 2, or 3
-    private spawnButton: Phaser.GameObjects.Text | null = null;
+    private minions: {sprite: Phaser.GameObjects.Sprite, type: number}[] = [];
 
     preload() {
         // Load the map
@@ -26,11 +24,25 @@ class GameScene extends Phaser.Scene {
         // Load the tileset images
         this.load.image('tileset', '/assets/tilesets/tuxmon-sample-32px-extruded.png');
         
-        // Load character sprites
-        this.load.image('player-front', '/assets/atlas/tuxemon-misa/misa-front.png');
-        this.load.image('player-back', '/assets/atlas/tuxemon-misa/misa-back.png');
-        this.load.image('player-left', '/assets/atlas/tuxemon-misa/misa-left.png');
-        this.load.image('player-right', '/assets/atlas/tuxemon-misa/misa-right.png');
+        // Load base-boy character sprites
+        this.load.spritesheet(
+            'player-idle',
+            '/assets/characters/base-boy/Unarmed_Idle_with_shadow.png',
+            { frameWidth: 64, frameHeight: 64 }
+        );
+        
+        this.load.spritesheet(
+            'player-walk',
+            '/assets/characters/base-boy/Unarmed_Run_with_shadow.png',
+            { frameWidth: 64, frameHeight: 64 }
+        );
+
+        // Load player hurt sprite
+        this.load.spritesheet(
+            'player-hurt',
+            '/assets/characters/base-boy/Unarmed_Hurt_with_shadow.png',
+            { frameWidth: 64, frameHeight: 64 }
+        );
 
         // Load slime spritesheets
         for (let i = 1; i <= 3; i++) {
@@ -44,10 +56,39 @@ class GameScene extends Phaser.Scene {
                 `/assets/characters/slime/Slime${i}_Walk_full.png`,
                 { frameWidth: 64, frameHeight: 64 }
             );
+            // Load slime hurt sprites
+            this.load.spritesheet(
+                `slime${i}-hurt`,
+                `/assets/characters/slime/Slime${i}_Hurt_full.png`,
+                { frameWidth: 64, frameHeight: 64 }
+            );
         }
     }
 
     create() {
+        // Create animations for base-boy character
+        this.anims.create({
+            key: 'player-idle',
+            frames: this.anims.generateFrameNumbers('player-idle', { start: 0, end: 5 }),
+            frameRate: 6.67,
+            repeat: -1
+        });
+        
+        this.anims.create({
+            key: 'player-walk',
+            frames: this.anims.generateFrameNumbers('player-walk', { start: 0, end: 7 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        // Player hurt animation
+        this.anims.create({
+            key: 'player-hurt',
+            frames: this.anims.generateFrameNumbers('player-hurt', { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: 0
+        });
+
         // Create animations for each slime type
         for (let i = 1; i <= 3; i++) {
             // Idle animation
@@ -64,6 +105,14 @@ class GameScene extends Phaser.Scene {
                 frames: this.anims.generateFrameNumbers(`slime${i}-walk`, { start: 0, end: 7 }),
                 frameRate: 10,
                 repeat: -1
+            });
+
+            // Hurt animation
+            this.anims.create({
+                key: `slime${i}-hurt`,
+                frames: this.anims.generateFrameNumbers(`slime${i}-hurt`, { start: 0, end: 3 }),
+                frameRate: 10,
+                repeat: 0
             });
         }
 
@@ -127,14 +176,16 @@ class GameScene extends Phaser.Scene {
         }
 
         // Create player at spawn point
-        this.player = this.physics.add.sprite(spawnX, spawnY, 'player-front');
+        this.player = this.physics.add.sprite(spawnX, spawnY, 'player-idle');
         if (!this.player) {
             console.error('Failed to create player sprite');
             return;
         }
         
+        // Set up player physics body with 32px radius
+        this.player.setCircle(32);
         this.player.setCollideWorldBounds(true);
-        this.player.setSize(16, 16).setOffset(8, 16);
+        this.player.play('player-idle');
         
         // Set up physics
         if (this.map) {
@@ -193,6 +244,9 @@ class GameScene extends Phaser.Scene {
                 const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
                 this.targetPosition = { x: worldPoint.x, y: worldPoint.y };
                 
+                // Debug log click position
+                console.log(`Clicked at world position: x=${Math.round(worldPoint.x)}, y=${Math.round(worldPoint.y)}`);
+                
                 // Draw a temporary marker at the target position
                 if (this.graphics) {
                     this.graphics.clear();
@@ -208,158 +262,40 @@ class GameScene extends Phaser.Scene {
         // Create graphics for visual feedback
         this.graphics = this.add.graphics();
         
-        // Create UI for slime selection and spawning
-        this.createSlimeUI();
-        
-        // Spawn initial slime
-        this.spawnSlime();
+        // Spawn initial slimes
+        this.spawnRandomSlimes(20);
     }
 
-    createSlimeUI() {
-        console.log('Creating slime UI...');
+    private spawnRandomSlime(): void {
+        if (!this.map || !this.groundLayer || !this.worldLayer) return;
         
-        // Create a fixed container for the UI
-        const uiContainer = this.add.container(0, 0).setScrollFactor(0);
+        // Get random position within map bounds
+        const x = Phaser.Math.Between(100, this.map.widthInPixels - 100);
+        const y = Phaser.Math.Between(100, this.map.heightInPixels - 100);
         
-        // Title with more contrast
-        const title = this.add.text(20, 20, 'SLIME TYPE:', { 
-            fontSize: '18px', 
-            color: '#ffffff',
-            backgroundColor: '#000000',
-            padding: { x: 15, y: 10 },
-            fontStyle: 'bold'
-        }).setScrollFactor(0);
-        uiContainer.add(title);
+        // Random slime type (1-3)
+        const slimeType = Phaser.Math.Between(1, 3);
         
-        // Slime type buttons
-        const buttonSpacing = 45;
-        const startY = 200; // Space below title
-        
-        for (let i = 1; i <= 3; i++) {
-            const buttonY = startY + ((i - 1) * buttonSpacing);
-            
-            // Create button background
-            const buttonBg = this.add.rectangle(200, buttonY, 130, 40, 0x333333)
-                .setStrokeStyle(2, 0xffffff)
-                .setScrollFactor(0);
-                
-            // Create button text
-            const buttonText = this.add.text(200, buttonY, `Spawn Slime ${i}`, {
-                fontSize: '14px',
-                color: '#ffffff',
-                fontStyle: 'bold'
-            })
-            .setOrigin(0.5)
-            .setScrollFactor(0);
-            
-            // Add both to container
-            uiContainer.add([buttonBg, buttonText]);
-            
-            // Set up interactivity
-            const button = this.add.zone(200, buttonY, 130, 40)
-                .setOrigin(0.5)
-                .setScrollFactor(0)
-                .setInteractive()
-                .on('pointerover', () => {
-                    buttonBg.setFillStyle(0x444444);
-                    buttonText.setColor('#00ff00');
-                })
-                .on('pointerout', () => {
-                    buttonBg.setFillStyle(this.selectedSlimeType === i ? 0x006600 : 0x333333);
-                    buttonText.setColor(this.selectedSlimeType === i ? '#00ff00' : '#ffffff');
-                })
-                .on('pointerdown', () => {
-                    console.log(`Selected slime type: ${i}`);
-                    this.selectedSlimeType = i;
-                    this.updateSlimeButtons();
-                    this.spawnSlime();
-                    buttonBg.setFillStyle(0x004400);
-                })
-                .on('pointerup', () => {
-                    buttonBg.setFillStyle(0x006600);
-                });
-            
-            uiContainer.add(button);
-            
-            // Update initial state
-            if (this.selectedSlimeType === i) {
-                buttonBg.setFillStyle(0x006600);
-                buttonText.setColor('#00ff00');
-            }
-        }
-        
-        // Make the UI draggable
-        let isDragging = false;
-        let dragStartX = 0;
-        let dragStartY = 0;
-        
-        title.setInteractive()
-            .on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-                isDragging = true;
-                dragStartX = pointer.x - uiContainer.x;
-                dragStartY = pointer.y - uiContainer.y;
-            });
-            
-        this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-            if (isDragging) {
-                uiContainer.x = pointer.x - dragStartX;
-                uiContainer.y = pointer.y - dragStartY;
-            }
-        });
-        
-        this.input.on('pointerup', () => {
-            isDragging = false;
-        });
-        
-        console.log('Slime UI created with fixed positioning');
+        // Spawn the slime
+        this.spawnSlimeAt(x, y, slimeType);
     }
     
-    updateSlimeButtons() {
-        console.log('Updating slime buttons...');
-        let updated = false;
-        
-        // Find all button containers and update their states
-        this.children.each((child: Phaser.GameObjects.GameObject) => {
-            if (child instanceof Phaser.GameObjects.Container) {
-                child.each((buttonPart: Phaser.GameObjects.GameObject) => {
-                    if (buttonPart instanceof Phaser.GameObjects.Text && buttonPart.text.startsWith('Spawn Slime ')) {
-                        const slimeNum = parseInt(buttonPart.text.split(' ')[2]);
-                        const isSelected = slimeNum === this.selectedSlimeType;
-                        
-                        // Find the corresponding background (previous child in container)
-                        const bg = child.getAt(child.getIndex(buttonPart) - 1) as Phaser.GameObjects.Rectangle;
-                        
-                        if (bg) {
-                            bg.setFillStyle(isSelected ? 0x006600 : 0x333333);
-                            buttonPart.setColor(isSelected ? '#00ff00' : '#ffffff');
-                            updated = true;
-                        }
-                    }
-                });
-            }
-        });
-        
-        if (!updated) {
-            console.warn('No slime buttons found to update');
-        }
-    }
-
-    spawnSlime() {
+    private spawnSlimeAt(x: number, y: number, slimeType: number): void {
         if (!this.player || !this.groundLayer || !this.worldLayer) return;
         
-        // Calculate position next to the player
-        const offsetX = 50;
-        const offsetY = 0;
-        const x = this.player.x + offsetX;
-        const y = this.player.y + offsetY;
-        
         try {
-            // Create the slime with physics
-            const slime = this.physics.add.sprite(x, y, `slime${this.selectedSlimeType}-idle`);
+            const slime = this.physics.add.sprite(x, y, `slime${slimeType}-idle`);
             if (!slime) {
                 console.error('Failed to create slime sprite');
                 return;
             }
+            
+            // Set up slime physics body with 32px radius
+            slime.setCircle(32);
+            
+            // Store reference to the slime type on the sprite for collision handling
+            slime.setData('type', 'slime');
+            slime.setData('slimeType', slimeType);
             
             // Set up collision with the map layers
             this.physics.add.collider(slime, this.groundLayer);
@@ -367,16 +303,19 @@ class GameScene extends Phaser.Scene {
             
             // Set up collision with the player
             if (this.player.body) {
-                this.physics.add.collider(slime, this.player);
+                this.physics.add.collider(slime, this.player, this.handleCollision);
             }
             
             // Set up collision with other slimes
-            this.minions.forEach(minion => {
-                this.physics.add.collider(slime, minion);
+            this.minions.forEach(({sprite: minion}) => {
+                this.physics.add.collider(slime, minion, this.handleSlimeCollision);
             });
             
+            // Add to minions array
+            this.minions.push({sprite: slime, type: slimeType});
+            
             // Configure physics properties
-            slime.play(`slime${this.selectedSlimeType}-idle`);
+            slime.play(`slime${slimeType}-idle`);
             slime.setCollideWorldBounds(true);
             slime.setImmovable(false);
             slime.setBounce(0.2);
@@ -388,18 +327,17 @@ class GameScene extends Phaser.Scene {
                     if (slime.active && slime.body) {
                         const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
                         const speed = Phaser.Math.FloatBetween(20, 50);
-                        
                         slime.setVelocity(
                             Math.cos(angle) * speed,
                             Math.sin(angle) * speed
                         );
-                        slime.play(`slime${this.selectedSlimeType}-walk`, true);
+                        slime.play(`slime${slimeType}-walk`, true);
                         
-                        // Stop after a short distance
+                        // Stop after a short time
                         this.time.delayedCall(1000, () => {
                             if (slime.active) {
                                 slime.setVelocity(0, 0);
-                                slime.play(`slime${this.selectedSlimeType}-idle`, true);
+                                slime.play(`slime${slimeType}-idle`, true);
                             }
                         });
                     }
@@ -407,89 +345,100 @@ class GameScene extends Phaser.Scene {
                 loop: true
             });
             
-            // Add to minions array
-            this.minions.push(slime);
-            console.log(`Spawned slime ${this.selectedSlimeType} at ${x}, ${y}`);
-            
         } catch (error) {
             console.error('Error spawning slime:', error);
         }
     }
+    
+    private spawnRandomSlimes(count: number): void {
+        for (let i = 0; i < count; i++) {
+            this.time.delayedCall(i * 500, () => this.spawnRandomSlime());
+        }
+    }
+    
+    private handleCollision: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (obj1, obj2) => {
+        const slime = obj1 as Phaser.Physics.Arcade.Sprite;
+        const player = obj2 as Phaser.Physics.Arcade.Sprite;
+        
+        // Play hurt animations
+        player.play('player-hurt');
+        slime.play(`slime${slime.getData('slimeType')}-hurt`);
+        
+        // Return to idle after hurt animation
+        this.time.delayedCall(500, () => {
+            if (player.active) player.play('player-idle');
+            if (slime.active) slime.play(`slime${slime.getData('slimeType')}-idle`);
+        });
+    }
+    
+    private handleSlimeCollision: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (obj1, obj2) => {
+        const s1 = obj1 as Phaser.Physics.Arcade.Sprite;
+        const s2 = obj2 as Phaser.Physics.Arcade.Sprite;
+        
+        // Play hurt animations for both slimes
+        s1.play(`slime${s1.getData('slimeType')}-hurt`);
+        s2.play(`slime${s2.getData('slimeType')}-hurt`);
+        
+        // Small knockback effect
+        const angle = Phaser.Math.Angle.Between(s1.x, s1.y, s2.x, s2.y);
+        s1.setVelocity(Math.cos(angle) * 100, Math.sin(angle) * 100);
+        s2.setVelocity(-Math.cos(angle) * 100, -Math.sin(angle) * 100);
+        
+        // Return to idle after hurt animation
+        this.time.delayedCall(500, () => {
+            if (s1.active) s1.play(`slime${s1.getData('slimeType')}-idle`);
+            if (s2.active) s2.play(`slime${s2.getData('slimeType')}-idle`);
+        });
+    }
 
     update() {
-        if (!this.player) return;
-        
-        const player = this.player;
-        
+        if (!this.player || !this.cursors) return;
+
+        // Stop any previous movement from the last frame
+        this.player.setVelocity(0);
+
+        // Handle keyboard input
+        const speed = this.playerSpeed;
+        if (this.cursors.left?.isDown) {
+            this.player.setVelocityX(-speed);
+            this.player.setFlipX(true);
+        } else if (this.cursors.right?.isDown) {
+            this.player.setVelocityX(speed);
+            this.player.setFlipX(false);
+        }
+
+        if (this.cursors.up?.isDown) {
+            this.player.setVelocityY(-speed);
+        } else if (this.cursors.down?.isDown) {
+            this.player.setVelocityY(speed);
+        }
+
+        // Normalize and scale the velocity so that player can't move faster along a diagonal
+        this.player.body.velocity.normalize().scale(speed);
+
+        // Update animations based on movement
+        if (this.cursors.left?.isDown || this.cursors.right?.isDown || 
+            this.cursors.up?.isDown || this.cursors.down?.isDown) {
+            this.player.play('player-walk', true);
+        } else {
+            this.player.play('player-idle', true);
+        }
+
         // Handle click-to-move
-        if (this.targetPosition) {
+        if (this.targetPosition && this.player) {
             const distance = Phaser.Math.Distance.Between(
-                player.x, 
-                player.y, 
+                this.player.x, 
+                this.player.y, 
                 this.targetPosition.x, 
                 this.targetPosition.y
             );
-            
-            if (distance > 5) {
-                // Move towards target
-                const angle = Phaser.Math.Angle.Between(
-                    player.x, 
-                    player.y, 
-                    this.targetPosition.x, 
-                    this.targetPosition.y
-                );
-                
-                player.setVelocity(
-                    Math.cos(angle) * this.playerSpeed,
-                    Math.sin(angle) * this.playerSpeed
-                );
-                
-                // Update player texture based on direction
-                const angleDeg = Phaser.Math.RadToDeg(angle);
-                if (angleDeg > -45 && angleDeg <= 45) {
-                    player.setTexture('player-right');
-                } else if (angleDeg > 45 && angleDeg <= 135) {
-                    player.setTexture('player-front');
-                } else if (angleDeg > 135 || angleDeg <= -135) {
-                    player.setTexture('player-left');
-                } else {
-                    player.setTexture('player-back');
-                }
-            } else {
-                // Reached the target
-                player.setVelocity(0);
+
+            // If we're close enough to the target, stop moving
+            if (distance < 5) {
+                this.player.setVelocity(0);
+                this.player.play('player-idle', true);
                 this.targetPosition = null;
-            }
-        } 
-        // Handle keyboard input if no target position
-        else if (this.cursors) {
-            const left = this.cursors.left;
-            const right = this.cursors.right;
-            const up = this.cursors.up;
-            const down = this.cursors.down;
-            
-            // Reset velocity
-            player.setVelocity(0);
-            
-            // Handle movement and change texture based on direction
-            if (left.isDown) {
-                player.setVelocityX(-this.playerSpeed);
-                player.setTexture('player-left');
-            } else if (right.isDown) {
-                player.setVelocityX(this.playerSpeed);
-                player.setTexture('player-right');
-            }
-            
-            if (up.isDown) {
-                player.setVelocityY(-this.playerSpeed);
-                if (!left.isDown && !right.isDown) {
-                    player.setTexture('player-back');
-                }
-            } else if (down.isDown) {
-                player.setVelocityY(this.playerSpeed);
-                if (!left.isDown && !right.isDown) {
-                    player.setTexture('player-front');
-                }
+                if (this.graphics) this.graphics.clear();
             }
         }
     }
