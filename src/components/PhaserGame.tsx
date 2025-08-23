@@ -15,6 +15,9 @@ class GameScene extends Phaser.Scene {
     private graphics: Phaser.GameObjects.Graphics | null = null;
     private zoomButtons: { zoomIn: Phaser.GameObjects.Text; zoomOut: Phaser.GameObjects.Text } | null = null;
     private currentZoom: number = 1;
+    private minions: Phaser.GameObjects.Sprite[] = [];
+    private selectedSlimeType: number = 1; // 1, 2, or 3
+    private spawnButton: Phaser.GameObjects.Text | null = null;
 
     preload() {
         // Load the map
@@ -28,9 +31,42 @@ class GameScene extends Phaser.Scene {
         this.load.image('player-back', '/assets/atlas/tuxemon-misa/misa-back.png');
         this.load.image('player-left', '/assets/atlas/tuxemon-misa/misa-left.png');
         this.load.image('player-right', '/assets/atlas/tuxemon-misa/misa-right.png');
+
+        // Load slime spritesheets
+        for (let i = 1; i <= 3; i++) {
+            this.load.spritesheet(
+                `slime${i}-idle`,
+                `/assets/characters/slime/Slime${i}_Idle_full.png`,
+                { frameWidth: 64, frameHeight: 64 }
+            );
+            this.load.spritesheet(
+                `slime${i}-walk`,
+                `/assets/characters/slime/Slime${i}_Walk_full.png`,
+                { frameWidth: 64, frameHeight: 64 }
+            );
+        }
     }
 
     create() {
+        // Create animations for each slime type
+        for (let i = 1; i <= 3; i++) {
+            // Idle animation
+            this.anims.create({
+                key: `slime${i}-idle`,
+                frames: this.anims.generateFrameNumbers(`slime${i}-idle`, { start: 0, end: 7 }),
+                frameRate: 10,
+                repeat: -1
+            });
+
+            // Walk animation
+            this.anims.create({
+                key: `slime${i}-walk`,
+                frames: this.anims.generateFrameNumbers(`slime${i}-walk`, { start: 0, end: 7 }),
+                frameRate: 10,
+                repeat: -1
+            });
+        }
+
         // Create the map
         this.map = this.make.tilemap({ key: 'map' });
         this.tileset = this.map.addTilesetImage('tuxmon-sample-32px-extruded', 'tileset');
@@ -110,8 +146,8 @@ class GameScene extends Phaser.Scene {
         if (this.map && this.player) {
             this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
             this.cameras.main.startFollow(this.player);
-            this.cameras.main.setZoom(1.5);
-            this.currentZoom = 1.5; // Update the current zoom state
+            this.cameras.main.setZoom(1);
+            this.currentZoom = 1; // Update the current zoom state
             
             // Add zoom buttons
             const style = { 
@@ -161,7 +197,7 @@ class GameScene extends Phaser.Scene {
                 if (this.graphics) {
                     this.graphics.clear();
                     this.graphics.fillStyle(0x00ff00, 0.5);
-                    this.graphics.fillCircle(worldPoint.x, worldPoint.y, 5);
+                    this.graphics.fillCircle(worldPoint.x, worldPoint.y, 10);
                     this.time.delayedCall(300, () => {
                         if (this.graphics) this.graphics.clear();
                     });
@@ -171,6 +207,213 @@ class GameScene extends Phaser.Scene {
         
         // Create graphics for visual feedback
         this.graphics = this.add.graphics();
+        
+        // Create UI for slime selection and spawning
+        this.createSlimeUI();
+        
+        // Spawn initial slime
+        this.spawnSlime();
+    }
+
+    createSlimeUI() {
+        console.log('Creating slime UI...');
+        
+        // Create a fixed container for the UI
+        const uiContainer = this.add.container(0, 0).setScrollFactor(0);
+        
+        // Title with more contrast
+        const title = this.add.text(20, 20, 'SLIME TYPE:', { 
+            fontSize: '18px', 
+            color: '#ffffff',
+            backgroundColor: '#000000',
+            padding: { x: 15, y: 10 },
+            fontStyle: 'bold'
+        }).setScrollFactor(0);
+        uiContainer.add(title);
+        
+        // Slime type buttons
+        const buttonSpacing = 45;
+        const startY = 200; // Space below title
+        
+        for (let i = 1; i <= 3; i++) {
+            const buttonY = startY + ((i - 1) * buttonSpacing);
+            
+            // Create button background
+            const buttonBg = this.add.rectangle(200, buttonY, 130, 40, 0x333333)
+                .setStrokeStyle(2, 0xffffff)
+                .setScrollFactor(0);
+                
+            // Create button text
+            const buttonText = this.add.text(200, buttonY, `Spawn Slime ${i}`, {
+                fontSize: '14px',
+                color: '#ffffff',
+                fontStyle: 'bold'
+            })
+            .setOrigin(0.5)
+            .setScrollFactor(0);
+            
+            // Add both to container
+            uiContainer.add([buttonBg, buttonText]);
+            
+            // Set up interactivity
+            const button = this.add.zone(200, buttonY, 130, 40)
+                .setOrigin(0.5)
+                .setScrollFactor(0)
+                .setInteractive()
+                .on('pointerover', () => {
+                    buttonBg.setFillStyle(0x444444);
+                    buttonText.setColor('#00ff00');
+                })
+                .on('pointerout', () => {
+                    buttonBg.setFillStyle(this.selectedSlimeType === i ? 0x006600 : 0x333333);
+                    buttonText.setColor(this.selectedSlimeType === i ? '#00ff00' : '#ffffff');
+                })
+                .on('pointerdown', () => {
+                    console.log(`Selected slime type: ${i}`);
+                    this.selectedSlimeType = i;
+                    this.updateSlimeButtons();
+                    this.spawnSlime();
+                    buttonBg.setFillStyle(0x004400);
+                })
+                .on('pointerup', () => {
+                    buttonBg.setFillStyle(0x006600);
+                });
+            
+            uiContainer.add(button);
+            
+            // Update initial state
+            if (this.selectedSlimeType === i) {
+                buttonBg.setFillStyle(0x006600);
+                buttonText.setColor('#00ff00');
+            }
+        }
+        
+        // Make the UI draggable
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        
+        title.setInteractive()
+            .on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+                isDragging = true;
+                dragStartX = pointer.x - uiContainer.x;
+                dragStartY = pointer.y - uiContainer.y;
+            });
+            
+        this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+            if (isDragging) {
+                uiContainer.x = pointer.x - dragStartX;
+                uiContainer.y = pointer.y - dragStartY;
+            }
+        });
+        
+        this.input.on('pointerup', () => {
+            isDragging = false;
+        });
+        
+        console.log('Slime UI created with fixed positioning');
+    }
+    
+    updateSlimeButtons() {
+        console.log('Updating slime buttons...');
+        let updated = false;
+        
+        // Find all button containers and update their states
+        this.children.each((child: Phaser.GameObjects.GameObject) => {
+            if (child instanceof Phaser.GameObjects.Container) {
+                child.each((buttonPart: Phaser.GameObjects.GameObject) => {
+                    if (buttonPart instanceof Phaser.GameObjects.Text && buttonPart.text.startsWith('Spawn Slime ')) {
+                        const slimeNum = parseInt(buttonPart.text.split(' ')[2]);
+                        const isSelected = slimeNum === this.selectedSlimeType;
+                        
+                        // Find the corresponding background (previous child in container)
+                        const bg = child.getAt(child.getIndex(buttonPart) - 1) as Phaser.GameObjects.Rectangle;
+                        
+                        if (bg) {
+                            bg.setFillStyle(isSelected ? 0x006600 : 0x333333);
+                            buttonPart.setColor(isSelected ? '#00ff00' : '#ffffff');
+                            updated = true;
+                        }
+                    }
+                });
+            }
+        });
+        
+        if (!updated) {
+            console.warn('No slime buttons found to update');
+        }
+    }
+
+    spawnSlime() {
+        if (!this.player || !this.groundLayer || !this.worldLayer) return;
+        
+        // Calculate position next to the player
+        const offsetX = 50;
+        const offsetY = 0;
+        const x = this.player.x + offsetX;
+        const y = this.player.y + offsetY;
+        
+        try {
+            // Create the slime with physics
+            const slime = this.physics.add.sprite(x, y, `slime${this.selectedSlimeType}-idle`);
+            if (!slime) {
+                console.error('Failed to create slime sprite');
+                return;
+            }
+            
+            // Set up collision with the map layers
+            this.physics.add.collider(slime, this.groundLayer);
+            this.physics.add.collider(slime, this.worldLayer);
+            
+            // Set up collision with the player
+            if (this.player.body) {
+                this.physics.add.collider(slime, this.player);
+            }
+            
+            // Set up collision with other slimes
+            this.minions.forEach(minion => {
+                this.physics.add.collider(slime, minion);
+            });
+            
+            // Configure physics properties
+            slime.play(`slime${this.selectedSlimeType}-idle`);
+            slime.setCollideWorldBounds(true);
+            slime.setImmovable(false);
+            slime.setBounce(0.2);
+            
+            // Add simple AI movement (wander around randomly)
+            this.time.addEvent({
+                delay: 2000,
+                callback: () => {
+                    if (slime.active && slime.body) {
+                        const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+                        const speed = Phaser.Math.FloatBetween(20, 50);
+                        
+                        slime.setVelocity(
+                            Math.cos(angle) * speed,
+                            Math.sin(angle) * speed
+                        );
+                        slime.play(`slime${this.selectedSlimeType}-walk`, true);
+                        
+                        // Stop after a short distance
+                        this.time.delayedCall(1000, () => {
+                            if (slime.active) {
+                                slime.setVelocity(0, 0);
+                                slime.play(`slime${this.selectedSlimeType}-idle`, true);
+                            }
+                        });
+                    }
+                },
+                loop: true
+            });
+            
+            // Add to minions array
+            this.minions.push(slime);
+            console.log(`Spawned slime ${this.selectedSlimeType} at ${x}, ${y}`);
+            
+        } catch (error) {
+            console.error('Error spawning slime:', error);
+        }
     }
 
     update() {
@@ -252,8 +495,8 @@ class GameScene extends Phaser.Scene {
     }
     
     private zoomCamera(delta: number): void {
-        this.currentZoom = Phaser.Math.Clamp(this.currentZoom + delta, 0.5, 2);
-        this.cameras.main.zoomTo(this.currentZoom, 200);
+        this.currentZoom = Phaser.Math.Clamp(this.currentZoom + delta, 0.5, 1);
+        this.cameras.main.zoomTo(this.currentZoom, 100);
     }
 }
 
