@@ -72,7 +72,7 @@ export const HeroSection = () => {
       </style>
 
       {/* Main Content */}
-      <div className={`relative z-10 text-center px-6 transition-all duration-[1500ms] ${
+      <div className={`relative z-10 text-center px-6 transition-all duration-&lsqb;1500ms&rsqb; ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
       }`}
       >
