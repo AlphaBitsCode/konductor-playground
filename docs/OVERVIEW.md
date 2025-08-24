@@ -10,10 +10,9 @@ Unlike traditional text-based SaaS interfaces, Konductor.AI provides a 2D pixela
 
 ## Key Features
 
-### 🎮 Immersive Interface
+### 🎮 Immersive Interface with Phaser Game Engine
 - **Retro Pixelart Design**: Using 'Press Start 2P', 'Jersey 25' Google fonts and open-source assets
-- **2D Navigation**: WASD/Arrow key movement like GatherTown
-- **Room-Based Interaction**: Different departments for different AI teams
+- **2D Navigation**: WASD/Arrow key movement like GatherTown, Touchscreen support
 - **Mobile & Desktop Compatible**: Responsive design for all devices
 
 ### 🤖 AI Minion Management
