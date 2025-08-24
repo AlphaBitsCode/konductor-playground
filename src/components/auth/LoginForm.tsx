@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const initialState: ActionResult = {
   success: false,
@@ -33,10 +33,11 @@ export default function LoginForm() {
   );
 
   // Redirect on success
-  if (state?.success) {
-    router.push("/office");
-    return null;
-  }
+  useEffect(() => {
+    if (state?.success) {
+      router.push("/office");
+    }
+  }, [state?.success, router]);
 
   return (
     <div className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-xl p-8 shadow-xl border border-white/20 relative z-10">
