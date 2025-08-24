@@ -14,16 +14,16 @@ export class GameMap {
 
     public preloadAssets(): void {
         // Load the map
-        this.scene.load.tilemapTiledJSON('map', '/assets/tilemaps/tuxemon-town.json');
+        this.scene.load.tilemapTiledJSON('map', 'assets/maps/tuxemon/tuxemon-town.json');
         
         // Load the tileset images
-        this.scene.load.image('tileset', '/assets/tilesets/tuxmon-sample-32px-extruded.png');
+        this.scene.load.image('tileset', 'assets/maps/tuxemon/tuxmon-32px.png');
     }
 
     public create(): boolean {
         // Create the map
         this.map = this.scene.make.tilemap({ key: 'map' });
-        this.tileset = this.map.addTilesetImage('tuxmon-sample-32px-extruded', 'tileset');
+        this.tileset = this.map.addTilesetImage('tuxmon-32px', 'tileset');
         
         if (!this.tileset || !this.map) {
             console.error('Failed to load tileset or map');
