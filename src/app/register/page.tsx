@@ -23,7 +23,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (state?.success) {
-      router.push("/dashboard");
+      router.push("/verify-email");
     }
   }, [state?.success, router]);
 
@@ -121,7 +121,7 @@ export default function RegisterPage() {
             </label>
             <input
               id="confirmPassword"
-              name="confirmPassword"
+              name="passwordConfirm"
               type="password"
               required
               minLength={8}

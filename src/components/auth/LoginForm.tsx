@@ -34,7 +34,7 @@ export default function LoginForm() {
 
   // Redirect on success
   if (state?.success) {
-    router.push("/dashboard");
+    router.push("/office");
     return null;
   }
 

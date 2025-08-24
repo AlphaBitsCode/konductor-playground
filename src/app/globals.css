@@ -74,3 +74,50 @@ body {
 .font-jersey {
   font-family: var(--font-jersey-25), sans-serif;
 }
+
+.font-press-start {
+  font-family: var(--font-press-start-2p), monospace;
+}
+
+/* Konductor.AI Brand Colors */
+:root {
+  --konductor-primary: #00ffff; /* Cyan */
+  --konductor-secondary: #ff00ff; /* Magenta */
+  --konductor-accent: #ffff00; /* Yellow */
+  --konductor-dark: #0a0a0a; /* Dark background */
+  --konductor-purple: #6366f1; /* Purple */
+  --konductor-blue: #3b82f6; /* Blue */
+}
+
+/* Pixelart styling utilities */
+.pixelated {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.retro-border {
+  border: 2px solid;
+  border-image: linear-gradient(45deg, var(--konductor-primary), var(--konductor-secondary)) 1;
+}
+
+.glow-text {
+  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+}
+
+.retro-button {
+  background: linear-gradient(45deg, var(--konductor-primary), var(--konductor-secondary));
+  border: 2px solid var(--konductor-primary);
+  color: var(--konductor-dark);
+  font-family: var(--font-press-start-2p), monospace;
+  font-size: 12px;
+  padding: 8px 16px;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.retro-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 255, 255, 0.3);
+}

@@ -157,8 +157,8 @@
       "duration": 180
     },
     "verificationTemplate": {
-      "subject": "Verify your {APP_NAME} email",
-      "body": "<p>Hello,</p>\n<p>Thank you for joining us at {APP_NAME}.</p>\n<p>Click on the button below to verify your email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-verification/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Verify</a>\n</p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>"
+      "subject": "Verify your Konductor.AI email",
+      "body": "<p>Hello,</p>\n<p>Thank you for joining us at Konductor.AI!</p>\n<p>Click on the button below to verify your email address and complete your account setup.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/verify-email/confirm?token={TOKEN}\" target=\"_blank\" rel=\"noopener\" style=\"display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-weight: 500;\">Verify Email Address</a>\n</p>\n<p style=\"margin-top: 20px; font-size: 14px; color: #666;\">\n  If the button doesn't work, copy and paste this link into your browser:<br/>\n  {APP_URL}/verify-email/confirm?token={TOKEN}\n</p>\n<p>\n  Thanks,<br/>\n  The Konductor.AI Team\n</p>"
     },
     "resetPasswordTemplate": {
       "subject": "Reset your {APP_NAME} password",

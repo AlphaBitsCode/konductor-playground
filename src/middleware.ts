@@ -13,15 +13,23 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl, 301);
   }
 
-  // 2) Existing auth logic (adjusted)
-  const protectedPaths = ["/dashboard"];
+  // 2) Authentication logic
+  const protectedPaths = ["/dashboard", "/office"];
   const isProtectedPath = protectedPaths.some((path) =>
     url.pathname.startsWith(path)
   );
 
-  // IMPORTANT: Do not include "/" in authPaths to avoid redirecting the marketing homepage
-  const authPaths = ["/login", "/register"];
-  const isAuthPath = authPaths.includes(url.pathname);
+  // Paths that require authentication but redirect to onboarding if user hasn't completed it
+  const onboardingPaths = ["/welcome"];
+  const isOnboardingPath = onboardingPaths.some((path) =>
+    url.pathname.startsWith(path)
+  );
+
+  // Public auth paths (login, register, email verification)
+  const authPaths = ["/login", "/register", "/verify-email"];
+  const isAuthPath = authPaths.some((path) =>
+    url.pathname.startsWith(path)
+  );
 
   const authCookie = request.cookies.get("pb_auth");
   let token: string | null = null;
@@ -32,13 +40,24 @@ export function middleware(request: NextRequest) {
   }
   const isAuthenticated = token && !isTokenExpired(token);
 
+  // Redirect authenticated users away from auth pages
   if (isAuthPath && isAuthenticated) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/office", request.url));
   }
 
+  // Redirect unauthenticated users from protected paths to login
   if (isProtectedPath && !isAuthenticated) {
-    // Keep original behavior: send unauthenticated users to the root (marketing page) instead of /login
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // Handle onboarding flow - requires authentication but allows incomplete profiles
+  if (isOnboardingPath && !isAuthenticated) {
+    return NextResponse.redirect(new URL("/register", request.url));
+  }
+
+  // Redirect authenticated users from root to office
+  if (url.pathname === "/" && isAuthenticated) {
+    return NextResponse.redirect(new URL("/office", request.url));
   }
 
   return NextResponse.next();

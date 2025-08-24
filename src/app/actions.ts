@@ -22,26 +22,15 @@ export async function signup(formData: FormData): Promise<ActionResult> {
   }
 
   try {
-    await pb.collection("users").create({
+    // Create user account
+    const user = await pb.collection("users").create({
       email,
       password,
       passwordConfirm,
     });
 
-    // Auto login after signup
-    const { token, record: model } = await pb
-      .collection("users")
-      .authWithPassword(email, password);
-
-    const cookie = JSON.stringify({ token, model });
-    const cookieStore = await cookies();
-
-    cookieStore.set("pb_auth", cookie, {
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      sameSite: "lax",
-      httpOnly: true,
-    });
+    // Send verification email
+    await pb.collection("users").requestVerification(email);
 
     return { success: true };
   } catch (error) {
@@ -89,6 +78,15 @@ export async function login(formData: FormData): Promise<ActionResult> {
       .authWithPassword(email, password);
 
     const { token, record: model } = authData;
+    
+    // Check if email is verified
+    if (!model.verified) {
+      return {
+        success: false,
+        error: "Please verify your email address before signing in. Check your inbox for a verification link.",
+      };
+    }
+
     const cookie = JSON.stringify({ token, model });
     const cookieStore = await cookies();
 
@@ -131,8 +129,50 @@ export async function login(formData: FormData): Promise<ActionResult> {
   }
 }
 
+export async function verifyEmail(token: string): Promise<ActionResult> {
+  try {
+    await pb.collection("users").confirmVerification(token);
+    return { success: true };
+  } catch (error) {
+    if (error instanceof ClientResponseError) {
+      if (error.status === 400) {
+        return {
+          success: false,
+          error: "Invalid or expired verification token",
+        };
+      }
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+    return {
+      success: false,
+      error: "Something went wrong. Please try again later.",
+    };
+  }
+}
+
+export async function resendVerification(email: string): Promise<ActionResult> {
+  try {
+    await pb.collection("users").requestVerification(email);
+    return { success: true };
+  } catch (error) {
+    if (error instanceof ClientResponseError) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+    return {
+      success: false,
+      error: "Something went wrong. Please try again later.",
+    };
+  }
+}
+
 export async function logout() {
   const cookieStore = await cookies();
   cookieStore.delete("pb_auth");
-  redirect("/");
+  redirect("/login");
 }
