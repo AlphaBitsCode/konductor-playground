@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -40,7 +39,7 @@ export const LockedDoorSection = () => {
   // Debounced username availability check
   const checkUsernameAvailability = async (username: string) => {
     if (username.length < 5) return;
-    
+
     setIsCheckingUsername(true);
     try {
       const response = await fetch("/api/early-access", {
@@ -73,7 +72,7 @@ export const LockedDoorSection = () => {
       const timeoutId = setTimeout(() => {
         checkUsernameAvailability(value);
       }, 500);
-      
+
       // Clear previous timeout
       return () => clearTimeout(timeoutId);
     }
@@ -81,9 +80,14 @@ export const LockedDoorSection = () => {
 
   const handleUsernameSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const usernameValidationError = validateUsername(username);
-    if (!username || usernameValidationError || usernameError || isCheckingUsername) {
+    if (
+      !username ||
+      usernameValidationError ||
+      usernameError ||
+      isCheckingUsername
+    ) {
       if (usernameValidationError) {
         setUsernameError(usernameValidationError);
       }
@@ -138,9 +142,7 @@ export const LockedDoorSection = () => {
       }
     } catch (error) {
       console.error("Signup failed:", error);
-      setErrorMsg(
-        "Network error. Please check your connection and try again.",
-      );
+      setErrorMsg("Network error. Please check your connection and try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -288,10 +290,9 @@ export const LockedDoorSection = () => {
                   </span>
                 </h2>
                 <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto">
-                  {formStep === 1 ? 
-                    "Choose your unique player designation for the beta program." :
-                    "Your access code will be dispatched to your secure channel."
-                  }
+                  {formStep === 1
+                    ? "Choose your unique player designation for the beta program."
+                    : "Your access code will be dispatched to your private channel."}
                 </p>
               </div>
 
@@ -299,27 +300,43 @@ export const LockedDoorSection = () => {
               <div className="flex justify-center mb-8">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-slate-900 font-bold text-sm transition-colors ${
-                      formStep === 1 ? 'bg-cyan-400' : 'bg-green-400'
-                    }`}>
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-slate-900 font-bold text-sm transition-colors ${
+                        formStep === 1 ? "bg-cyan-400" : "bg-green-400"
+                      }`}
+                    >
                       1
                     </div>
-                    <span className={`ml-2 font-medium transition-colors ${
-                      formStep === 1 ? 'text-cyan-400' : 'text-green-400'
-                    }`}>Username</span>
+                    <span
+                      className={`ml-2 font-medium transition-colors ${
+                        formStep === 1 ? "text-cyan-400" : "text-green-400"
+                      }`}
+                    >
+                      ID
+                    </span>
                   </div>
-                  <div className={`w-8 h-0.5 transition-colors ${
-                    formStep === 2 ? 'bg-cyan-400' : 'bg-slate-600'
-                  }`}></div>
+                  <div
+                    className={`w-8 h-0.5 transition-colors ${
+                      formStep === 2 ? "bg-cyan-400" : "bg-slate-600"
+                    }`}
+                  ></div>
                   <div className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${
-                      formStep === 2 ? 'bg-cyan-400 text-slate-900' : 'bg-slate-600 text-slate-400'
-                    }`}>
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${
+                        formStep === 2
+                          ? "bg-cyan-400 text-slate-900"
+                          : "bg-slate-600 text-slate-400"
+                      }`}
+                    >
                       2
                     </div>
-                    <span className={`ml-2 font-medium transition-colors ${
-                      formStep === 2 ? 'text-cyan-400' : 'text-slate-400'
-                    }`}>Contact</span>
+                    <span
+                      className={`ml-2 font-medium transition-colors ${
+                        formStep === 2 ? "text-cyan-400" : "text-slate-400"
+                      }`}
+                    >
+                      Communication
+                    </span>
                   </div>
                 </div>
               </div>
@@ -387,7 +404,7 @@ export const LockedDoorSection = () => {
                       className="w-full pixel-button glassmorphism px-6 py-4 rounded-lg border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                     >
                       <span className="pixel-font text-sm">
-                        VALIDATE USERNAME →
+                        RESERVE USERNAME →
                       </span>
                     </button>
                   </form>
@@ -403,11 +420,15 @@ export const LockedDoorSection = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <span className="pixel-font text-xs text-cyan-400">
-                              PLAYER ID
+                              Konductor ID
                             </span>
                             <div className="flex items-center space-x-2">
-                              <span className="text-cyan-400 pixel-font text-sm">@</span>
-                              <span className="text-white font-bold">{username}</span>
+                              <span className="text-cyan-400 pixel-font text-sm">
+                                @
+                              </span>
+                              <span className="text-white font-bold">
+                                {username}
+                              </span>
                             </div>
                           </div>
                           <button
@@ -425,7 +446,7 @@ export const LockedDoorSection = () => {
                           htmlFor="early-access-email"
                           className="block pixel-font text-sm text-cyan-400 mb-2"
                         >
-                          Secure Channel
+                          Private Channel
                         </label>
                         <input
                           id="early-access-email"
