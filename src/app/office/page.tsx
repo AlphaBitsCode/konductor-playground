@@ -8,22 +8,16 @@ import {
   Calendar,
   CheckSquare,
   Clock,
-  ChevronDown,
   ArrowRight,
-  ArrowDown
+  ArrowDown,
+  Settings,
+  Copy,
+  Check,
+  QrCode,
+  Smartphone
 } from "lucide-react";
-
-type Workspace = {
-  id: string;
-  name: string;
-  isDefault: boolean;
-};
-
-const workspaces: Workspace[] = [
-  { id: "1", name: "Default Workspace", isDefault: true },
-  { id: "2", name: "Marketing Team", isDefault: false },
-  { id: "3", name: "Development", isDefault: false },
-];
+import { PixelWindow } from "@/components/ui/PixelWindow";
+import { PixelDialog } from "@/components/ui/PixelDialog";
 
 type CommunicationChannel = {
   id: string;
@@ -31,6 +25,7 @@ type CommunicationChannel = {
   icon: string;
   connected: boolean;
   color: string;
+  connectedInfo?: string;
 };
 
 const communicationChannels: CommunicationChannel[] = [
@@ -66,118 +61,453 @@ const upcomingEvents: CalendarEvent[] = [
   { id: "3", title: "Project Review", time: "10:00", date: "Tomorrow" },
 ];
 
+type ConnectionStep = 'initial' | 'qr' | 'connecting' | 'connected';
+
 export default function OfficeDashboard() {
-  const [selectedWorkspace, setSelectedWorkspace] = useState(workspaces[0]);
-  const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false);
+  const [showChannelDialog, setShowChannelDialog] = useState(false);
+  const [selectedChannel, setSelectedChannel] = useState<CommunicationChannel | null>(null);
+  const [channels, setChannels] = useState(communicationChannels);
+  const [connectionStep, setConnectionStep] = useState<ConnectionStep>('initial');
+  const [copiedText, setCopiedText] = useState('');
+  const [username] = useState('johndoe'); // This would come from user context
+
+  const completedTodos = todoItems.filter(item => item.completed).length;
+  const totalTodos = todoItems.length;
+  const connectedChannels = channels.filter(ch => ch.connected).length;
+  const totalChannels = channels.length;
+
+  const handleChannelClick = (channel: CommunicationChannel) => {
+    setSelectedChannel(channel);
+    setConnectionStep('initial');
+    setShowChannelDialog(true);
+  };
+
+  const handleConnect = () => {
+    if (!selectedChannel) return;
+    
+    if (selectedChannel.id === 'whatsapp' || selectedChannel.id === 'zalo') {
+      setConnectionStep('qr');
+    } else if (selectedChannel.id === 'email') {
+      setConnectionStep('connected');
+    } else if (selectedChannel.id === 'slack') {
+      setConnectionStep('connected');
+    }
+  };
+
+  const handleQRClick = () => {
+    setConnectionStep('connecting');
+    setTimeout(() => {
+      setConnectionStep('connected');
+      // Update the channel as connected
+      setChannels(prev => prev.map(ch => 
+        ch.id === selectedChannel?.id 
+          ? { 
+              ...ch, 
+              connected: true, 
+              connectedInfo: selectedChannel.id === 'whatsapp' ? '+84111222333' : 'Connected'
+            }
+          : ch
+      ));
+    }, 2000);
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedText(text);
+    setTimeout(() => setCopiedText(''), 2000);
+  };
+
+  const handleClose = () => {
+    setShowChannelDialog(false);
+    setConnectionStep('initial');
+  };
+
+  const renderConnectionContent = () => {
+    if (!selectedChannel) return null;
+
+    // WhatsApp Flow
+    if (selectedChannel.id === 'whatsapp') {
+      switch (connectionStep) {
+        case 'initial':
+          return (
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="text-6xl mb-4">{selectedChannel.icon}</div>
+                <h3 className="font-press-start text-lg dark:text-white text-stone-900 mb-2">
+                  Connect WhatsApp
+                </h3>
+                <p className="font-jersey dark:text-slate-300 text-stone-700">
+                  Follow these steps to connect your WhatsApp:
+                </p>
+              </div>
+              
+              <div className="space-y-4 text-left">
+                <div className="flex items-start space-x-3">
+                  <span className="font-press-start text-xs dark:text-cyan-400 text-amber-600">1.</span>
+                  <span className="font-jersey dark:text-slate-300 text-stone-700">
+                    Open WhatsApp on your phone
+                  </span>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <span className="font-press-start text-xs dark:text-cyan-400 text-amber-600">2.</span>
+                  <span className="font-jersey dark:text-slate-300 text-stone-700">
+                    Go to Settings → Linked Devices
+                  </span>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <span className="font-press-start text-xs dark:text-cyan-400 text-amber-600">3.</span>
+                  <span className="font-jersey dark:text-slate-300 text-stone-700">
+                    Tap "Link a Device" and scan the QR code
+                  </span>
+                </div>
+              </div>
+              
+              <button 
+                onClick={handleConnect}
+                className="w-full retro-button-3d retro-border-thick p-4 font-press-start text-sm"
+              >
+                SHOW QR CODE
+              </button>
+            </div>
+          );
+        
+        case 'qr':
+          return (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h3 className="font-press-start text-lg dark:text-white text-stone-900 mb-4">
+                  Scan QR Code
+                </h3>
+                <div 
+                  className="w-48 h-48 mx-auto retro-border-thick dark:bg-white bg-gray-100 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
+                  onClick={handleQRClick}
+                >
+                  <QrCode className="w-32 h-32 text-black" />
+                </div>
+                <p className="font-jersey dark:text-slate-300 text-stone-700 mt-4">
+                  Click on QR code to simulate scanning
+                </p>
+              </div>
+            </div>
+          );
+        
+        case 'connecting':
+          return (
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="text-6xl mb-4 animate-pulse">⏳</div>
+                <h3 className="font-press-start text-lg dark:text-white text-stone-900 mb-2">
+                  Connecting...
+                </h3>
+                <p className="font-jersey dark:text-slate-300 text-stone-700">
+                  Please wait while we establish the connection
+                </p>
+              </div>
+            </div>
+          );
+        
+        case 'connected':
+          return (
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="text-6xl mb-4">✅</div>
+                <h3 className="font-press-start text-lg dark:text-white text-stone-900 mb-2">
+                  Connected!
+                </h3>
+                <p className="font-jersey dark:text-slate-300 text-stone-700 mb-4">
+                  WhatsApp number: <span className="font-press-start text-xs dark:text-green-400 text-green-600">+84111222333</span>
+                </p>
+                <p className="font-jersey dark:text-slate-300 text-stone-700">
+                  Listening for incoming messages...
+                </p>
+              </div>
+              
+              <button 
+                onClick={handleClose}
+                className="w-full retro-button-3d retro-border-thick p-4 font-press-start text-sm"
+              >
+                CLOSE
+              </button>
+            </div>
+          );
+      }
+    }
+
+    // Zalo Flow
+    if (selectedChannel.id === 'zalo') {
+      switch (connectionStep) {
+        case 'initial':
+          return (
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="text-6xl mb-4">{selectedChannel.icon}</div>
+                <h3 className="font-press-start text-lg dark:text-white text-stone-900 mb-2">
+                  Connect Zalo
+                </h3>
+                <p className="font-jersey dark:text-slate-300 text-stone-700">
+                  Follow these steps to connect your Zalo:
+                </p>
+              </div>
+              
+              <div className="space-y-4 text-left">
+                <div className="flex items-start space-x-3">
+                  <span className="font-press-start text-xs dark:text-cyan-400 text-amber-600">1.</span>
+                  <span className="font-jersey dark:text-slate-300 text-stone-700">
+                    Open Zalo on your phone
+                  </span>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <span className="font-press-start text-xs dark:text-cyan-400 text-amber-600">2.</span>
+                  <span className="font-jersey dark:text-slate-300 text-stone-700">
+                    Go to Personal → QR Code Scanner
+                  </span>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <span className="font-press-start text-xs dark:text-cyan-400 text-amber-600">3.</span>
+                  <span className="font-jersey dark:text-slate-300 text-stone-700">
+                    Scan the QR code to link your account
+                  </span>
+                </div>
+              </div>
+              
+              <button 
+                onClick={handleConnect}
+                className="w-full retro-button-3d retro-border-thick p-4 font-press-start text-sm"
+              >
+                SHOW QR CODE
+              </button>
+            </div>
+          );
+        
+        case 'qr':
+          return (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h3 className="font-press-start text-lg dark:text-white text-stone-900 mb-4">
+                  Scan QR Code
+                </h3>
+                <div 
+                  className="w-48 h-48 mx-auto retro-border-thick dark:bg-white bg-gray-100 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
+                  onClick={handleQRClick}
+                >
+                  <QrCode className="w-32 h-32 text-black" />
+                </div>
+                <p className="font-jersey dark:text-slate-300 text-stone-700 mt-4">
+                  Click on QR code to simulate scanning
+                </p>
+              </div>
+            </div>
+          );
+        
+        case 'connecting':
+          return (
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="text-6xl mb-4 animate-pulse">⏳</div>
+                <h3 className="font-press-start text-lg dark:text-white text-stone-900 mb-2">
+                  Connecting...
+                </h3>
+                <p className="font-jersey dark:text-slate-300 text-stone-700">
+                  Please wait while we establish the connection
+                </p>
+              </div>
+            </div>
+          );
+        
+        case 'connected':
+          return (
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="text-6xl mb-4">✅</div>
+                <h3 className="font-press-start text-lg dark:text-white text-stone-900 mb-2">
+                  Connected!
+                </h3>
+                <p className="font-jersey dark:text-slate-300 text-stone-700 mb-4">
+                  Zalo account successfully linked
+                </p>
+                <p className="font-jersey dark:text-slate-300 text-stone-700">
+                  Listening for incoming messages...
+                </p>
+              </div>
+              
+              <button 
+                onClick={handleClose}
+                className="w-full retro-button-3d retro-border-thick p-4 font-press-start text-sm"
+              >
+                CLOSE
+              </button>
+            </div>
+          );
+      }
+    }
+
+    // Email Flow
+    if (selectedChannel.id === 'email') {
+      const emailAddress = `${username}@konductor.ai`;
+      
+      return (
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="text-6xl mb-4">{selectedChannel.icon}</div>
+            <h3 className="font-press-start text-lg dark:text-white text-stone-900 mb-2">
+              Email Integration
+            </h3>
+            <p className="font-jersey dark:text-slate-300 text-stone-700">
+              Your personal Konductor email address:
+            </p>
+          </div>
+          
+          <div className="retro-border-thick p-4 dark:bg-slate-800 bg-stone-200">
+            <div className="flex items-center justify-between">
+              <span className="font-press-start text-sm dark:text-cyan-400 text-amber-600">
+                {emailAddress}
+              </span>
+              <button
+                onClick={() => copyToClipboard(emailAddress)}
+                className="retro-button-3d retro-border-thick p-2"
+              >
+                {copiedText === emailAddress ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <p className="font-jersey dark:text-slate-300 text-stone-700 text-sm">
+              Send a test email to this address to verify the connection.
+            </p>
+            <p className="font-jersey dark:text-slate-500 text-stone-500 text-xs">
+              All emails sent to this address will be processed by your AI assistant.
+            </p>
+          </div>
+          
+          <button 
+            onClick={handleClose}
+            className="w-full retro-button-3d retro-border-thick p-4 font-press-start text-sm"
+          >
+            CLOSE
+          </button>
+        </div>
+      );
+    }
+
+    // Slack Flow
+    if (selectedChannel.id === 'slack') {
+      const webhookUrl = 'https://konductor.ai/slack-callback';
+      
+      return (
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="text-6xl mb-4">{selectedChannel.icon}</div>
+            <h3 className="font-press-start text-lg dark:text-white text-stone-900 mb-2">
+              Slack Integration
+            </h3>
+            <p className="font-jersey dark:text-slate-300 text-stone-700">
+              Follow these steps to connect Slack:
+            </p>
+          </div>
+          
+          <div className="space-y-4 text-left">
+            <div className="flex items-start space-x-3">
+              <span className="font-press-start text-xs dark:text-cyan-400 text-amber-600">1.</span>
+              <span className="font-jersey dark:text-slate-300 text-stone-700">
+                Go to your Slack workspace settings
+              </span>
+            </div>
+            <div className="flex items-start space-x-3">
+              <span className="font-press-start text-xs dark:text-cyan-400 text-amber-600">2.</span>
+              <span className="font-jersey dark:text-slate-300 text-stone-700">
+                Create a new Slack app or webhook
+              </span>
+            </div>
+            <div className="flex items-start space-x-3">
+              <span className="font-press-start text-xs dark:text-cyan-400 text-amber-600">3.</span>
+              <span className="font-jersey dark:text-slate-300 text-stone-700">
+                Copy and paste this webhook URL:
+              </span>
+            </div>
+          </div>
+          
+          <div className="retro-border-thick p-4 dark:bg-slate-800 bg-stone-200">
+            <div className="flex items-center justify-between">
+              <span className="font-press-start text-xs dark:text-cyan-400 text-amber-600 break-all">
+                {webhookUrl}
+              </span>
+              <button
+                onClick={() => copyToClipboard(webhookUrl)}
+                className="retro-button-3d retro-border-thick p-2 ml-2"
+              >
+                {copiedText === webhookUrl ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <p className="font-jersey dark:text-slate-300 text-stone-700 text-sm">
+              Once configured, your Slack messages will be processed by Konductor AI.
+            </p>
+            <p className="font-jersey dark:text-slate-500 text-stone-500 text-xs">
+              Make sure to grant the necessary permissions for message reading.
+            </p>
+          </div>
+          
+          <button 
+            onClick={handleClose}
+            className="w-full retro-button-3d retro-border-thick p-4 font-press-start text-sm"
+          >
+            CLOSE
+          </button>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
-    <div className="p-6 space-y-6 min-h-screen">
-      {/* Top Bar with Workspace Selection */}
-      <div className="flex justify-end mb-8">
-        <div className="relative">
-          <button
-            onClick={() => setShowWorkspaceDropdown(!showWorkspaceDropdown)}
-            className="flex items-center space-x-2 px-4 py-2 dark:bg-slate-800/60 bg-stone-200/80 border-2 border-solid dark:border-slate-600 border-stone-400 font-jersey dark:text-white text-stone-800 hover:dark:bg-slate-700/60 hover:bg-stone-300/80 transition-colors pixelated-stairs"
-          >
-            <span>{selectedWorkspace.name}</span>
-            <ChevronDown className="h-4 w-4" />
-          </button>
-          
-          {showWorkspaceDropdown && (
-            <div className="absolute right-0 mt-2 w-64 dark:bg-slate-800 bg-stone-100 border-2 border-solid dark:border-slate-600 border-stone-400 shadow-lg z-50 pixelated-stairs">
-              {workspaces.map((workspace) => (
-                <button
-                  key={workspace.id}
-                  onClick={() => {
-                    setSelectedWorkspace(workspace);
-                    setShowWorkspaceDropdown(false);
-                  }}
-                  className={`w-full text-left px-4 py-3 font-jersey hover:dark:bg-slate-700 hover:bg-stone-200 transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                    selectedWorkspace.id === workspace.id ? 'dark:bg-slate-700 bg-stone-200' : ''
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="dark:text-white text-stone-800">{workspace.name}</span>
-                    {workspace.isDefault && (
-                      <span className="text-xs dark:text-cyan-400 text-amber-600 font-press-start">DEFAULT</span>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
+    <div className="retro-theme retro-high-contrast p-8 space-y-6 min-h-screen">
       {/* Main Dashboard Flow */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Communication Channels Column */}
         <div className="lg:col-span-2">
-          <div className="pixel-corners--wrapper">
-            <div className="pixel-corners dark:bg-slate-800/40 bg-stone-100/60 p-6">
-            <h3 className="font-press-start text-sm dark:text-white text-stone-800 mb-6 text-center">Channels</h3>
+          <PixelWindow 
+            title="Channels" 
+            stats={`${connectedChannels}/${totalChannels}`}
+            variant="primary"
+          >
             <div className="space-y-4">
-              {communicationChannels.map((channel) => (
+              {channels.map((channel) => (
                 <div key={channel.id} className="flex flex-col items-center">
                   <button
-                    className={`w-12 h-12 border-2 border-solid flex items-center justify-center text-2xl transition-all pixelated-stairs ${
+                    onClick={() => handleChannelClick(channel)}
+                    className={`w-12 h-12 retro-border-thick flex items-center justify-center text-2xl retro-button-3d ${
                       channel.connected 
-                        ? 'dark:bg-slate-700 bg-stone-200 dark:border-slate-500 border-stone-500 hover:scale-105' 
-                        : 'dark:bg-slate-900/50 bg-stone-300/50 dark:border-slate-700 border-stone-500 opacity-50 cursor-not-allowed'
+                        ? 'hover:scale-105' 
+                        : 'hover:scale-105'
                     }`}
-                    disabled={!channel.connected}
                   >
                     {channel.icon}
                   </button>
                   <span className="text-xs font-jersey dark:text-slate-400 text-stone-600 mt-1 text-center">
                     {channel.name}
                   </span>
-                  {/* Arrow pointing right */}
-                  <ArrowRight className="h-4 w-4 dark:text-slate-500 text-stone-500 mt-2" />
+                  {channel.connected && channel.connectedInfo && (
+                    <span className="text-xs font-press-start dark:text-green-400 text-green-600 mt-1">
+                      {channel.connectedInfo}
+                    </span>
+                  )}
+                  <ArrowRight className="h-4 w-4 dark:text-cyan-400 text-amber-600 mt-2" />
                 </div>
               ))}
             </div>
-            </div>
-          </div>
+          </PixelWindow>
         </div>
 
-        {/* Konductor Logo Column */}
-        <div className="lg:col-span-2 flex flex-col items-center justify-center">
-          <div className="pixel-corners--wrapper">
-            <div className="pixel-corners dark:bg-slate-800/40 bg-stone-100/60 p-8">
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 mb-4">
-                <Image
-                  src="/logos/k_icon.png"
-                  alt="Konductor Logo"
-                  width={64}
-                  height={64}
-                  className="pixelated"
-                />
-              </div>
-              <span className="font-press-start text-xs dark:text-white text-stone-800 text-center">KONDUCTOR</span>
-            </div>
-            </div>
-          </div>
-          
-          {/* Arrows pointing to sections */}
-          <div className="mt-6 grid grid-cols-2 gap-4">
-            <ArrowDown className="h-6 w-6 dark:text-slate-500 text-stone-500" />
-            <ArrowDown className="h-6 w-6 dark:text-slate-500 text-stone-500" />
-            <ArrowDown className="h-6 w-6 dark:text-slate-500 text-stone-500" />
-            <ArrowDown className="h-6 w-6 dark:text-slate-500 text-stone-500" />
-          </div>
-        </div>
+        
 
         {/* Right Side Sections */}
         <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Timeline Section */}
-          <div className="pixel-corners--wrapper">
-            <div className="pixel-corners dark:bg-slate-800/40 bg-stone-100/60 p-6">
-            <div className="flex items-center mb-4">
-              <Clock className="h-5 w-5 dark:text-cyan-400 text-amber-600 mr-2" />
-              <h3 className="font-press-start text-sm dark:text-white text-stone-800">Timeline</h3>
-            </div>
+          <PixelWindow title="Timeline" stats="0 events">
             <div className="space-y-3">
               <div className="text-sm font-jersey dark:text-slate-300 text-stone-700">
                 No recent activity
@@ -186,23 +516,17 @@ export default function OfficeDashboard() {
                 Connect channels to see timeline updates
               </div>
             </div>
-            </div>
-          </div>
+          </PixelWindow>
 
           {/* TODO List Section */}
-          <div className="pixel-corners--wrapper">
-            <div className="pixel-corners dark:bg-slate-800/40 bg-stone-100/60 p-6">
-            <div className="flex items-center mb-4">
-              <CheckSquare className="h-5 w-5 dark:text-cyan-400 text-amber-600 mr-2" />
-              <h3 className="font-press-start text-sm dark:text-white text-stone-800">TODO List</h3>
-            </div>
+          <PixelWindow title="TODO List" stats={`${completedTodos}/${totalTodos} tasks`}>
             <div className="space-y-3">
               {todoItems.map((item) => (
                 <div key={item.id} className="flex items-center space-x-3">
                   <input
                     type="checkbox"
                     checked={item.completed}
-                    className="w-4 h-4 border-2 dark:border-slate-500 border-stone-500 pixelated"
+                    className="w-4 h-4 retro-border-thick pixelated"
                     readOnly
                   />
                   <span className={`text-sm font-jersey ${
@@ -212,26 +536,20 @@ export default function OfficeDashboard() {
                   }`}>
                     {item.title}
                   </span>
-                  <span className={`text-xs px-2 py-1 font-press-start pixelated-stairs ${
-                    item.priority === 'high' ? 'dark:bg-red-900/30 bg-red-200/60 dark:text-red-400 text-red-700' :
-                    item.priority === 'medium' ? 'dark:bg-yellow-900/30 bg-yellow-200/60 dark:text-yellow-400 text-yellow-700' :
-                    'dark:bg-green-900/30 bg-green-200/60 dark:text-green-400 text-green-700'
+                  <span className={`text-xs px-2 py-1 font-press-start retro-border-thick ${
+                    item.priority === 'high' ? 'dark:bg-red-900/30 bg-red-200/60 dark:text-red-400 text-red-700 dark:border-red-400 border-red-700' :
+                    item.priority === 'medium' ? 'dark:bg-yellow-900/30 bg-yellow-200/60 dark:text-yellow-400 text-yellow-700 dark:border-yellow-400 border-yellow-700' :
+                    'dark:bg-green-900/30 bg-green-200/60 dark:text-green-400 text-green-700 dark:border-green-400 border-green-700'
                   }`}>
                     {item.priority.toUpperCase()}
                   </span>
                 </div>
               ))}
             </div>
-            </div>
-          </div>
+          </PixelWindow>
 
           {/* Conversations Summary Section */}
-          <div className="pixel-corners--wrapper">
-            <div className="pixel-corners dark:bg-slate-800/40 bg-stone-100/60 p-6">
-            <div className="flex items-center mb-4">
-              <MessageCircle className="h-5 w-5 dark:text-cyan-400 text-amber-600 mr-2" />
-              <h3 className="font-press-start text-sm dark:text-white text-stone-800">Conversations</h3>
-            </div>
+          <PixelWindow title="Conversations" stats="0 messages">
             <div className="space-y-3">
               <div className="text-sm font-jersey dark:text-slate-300 text-stone-700">
                 No conversations yet
@@ -240,16 +558,10 @@ export default function OfficeDashboard() {
                 Connect communication channels to start
               </div>
             </div>
-            </div>
-          </div>
+          </PixelWindow>
 
           {/* Calendar Section */}
-          <div className="pixel-corners--wrapper">
-            <div className="pixel-corners dark:bg-slate-800/40 bg-stone-100/60 p-6">
-            <div className="flex items-center mb-4">
-              <Calendar className="h-5 w-5 dark:text-cyan-400 text-amber-600 mr-2" />
-              <h3 className="font-press-start text-sm dark:text-white text-stone-800">Calendar</h3>
-            </div>
+          <PixelWindow title="Calendar" stats={`${upcomingEvents.length} events`}>
             <div className="space-y-3">
               {upcomingEvents.map((event) => (
                 <div key={event.id} className="flex items-center justify-between">
@@ -264,10 +576,19 @@ export default function OfficeDashboard() {
                 </div>
               ))}
             </div>
-            </div>
-          </div>
+          </PixelWindow>
         </div>
       </div>
+
+      {/* Channel Connection Dialog */}
+      <PixelDialog
+        isOpen={showChannelDialog}
+        onClose={handleClose}
+        title={selectedChannel ? `Connect ${selectedChannel.name}` : 'Connect Channel'}
+        size="md"
+      >
+        {renderConnectionContent()}
+      </PixelDialog>
     </div>
   );
 }

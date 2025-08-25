@@ -13,6 +13,7 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   { label: "Office", href: "/office", icon: "🏢" },
+  { label: "Messages", href: "/office/messages", icon: "💬" },
   { label: "Workshop", href: "/office/workshop", icon: "🔧" },
   { label: "Town", href: "/town", icon: "🏘️" },
   { label: "Settings", href: "/office/settings", icon: "⚙️" },

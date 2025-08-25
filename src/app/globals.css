@@ -444,3 +444,228 @@ body {
     radial-gradient(circle at 25% 25%, rgba(255,255,255,0.05) 1px, transparent 1px),
     radial-gradient(circle at 75% 75%, rgba(0,0,0,0.2) 1px, transparent 1px);
 }
+
+/* Pixel Window Styles */
+.pixel-window-container {
+  position: relative;
+  width: 100%;
+}
+
+.pixel-window-shadow {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: -4px;
+  bottom: -4px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 4px solid;
+  border-color: #000;
+  z-index: -1;
+}
+
+.pixel-window {
+  position: relative;
+  border: 4px solid;
+  background: transparent;
+  z-index: 1;
+}
+
+.pixel-window-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 4px solid;
+  border-color: inherit;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dark .pixel-window-header {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.pixel-window-stats {
+  padding: 4px 8px;
+  border: 2px solid;
+  border-color: inherit;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dark .pixel-window-stats {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pixel-window-content {
+  padding: 20px;
+}
+
+/* Pixel Dialog Styles */
+.pixel-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.pixel-dialog {
+  position: relative;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.pixel-dialog-shadow {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  right: -6px;
+  bottom: -6px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 4px solid #000;
+  z-index: -1;
+}
+
+/* Updated Pixel Dialog Styles */
+.pixel-dialog-content {
+  position: relative;
+  border: 4px solid;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.pixel-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 4px solid;
+  border-color: inherit;
+  transition: all 0.3s ease;
+}
+
+.pixel-dialog-close-btn {
+  padding: 8px;
+  border: 2px solid;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Updated Pixel Window Styles */
+.pixel-window {
+  position: relative;
+  border: 4px solid;
+  background: transparent;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.pixel-window-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 4px solid;
+  border-color: inherit;
+  transition: all 0.3s ease;
+}
+
+.pixel-window-stats {
+  padding: 4px 8px;
+  border: 2px solid;
+  border-color: inherit;
+  transition: all 0.3s ease;
+}
+
+.dark .pixel-window-stats {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pixel-window-content {
+  padding: 20px;
+}
+
+.pixel-dialog-close-btn:hover {
+  background: rgba(255, 0, 0, 0.2);
+  border-color: #ff0000;
+  color: #ff0000;
+}
+
+.pixel-dialog-body {
+  padding: 24px;
+}
+
+/* High Contrast Retro Theme Overrides */
+.retro-high-contrast {
+  --text-primary: #ffffff;
+  --text-secondary: #00ffff;
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --border-primary: #ffffff;
+  --border-secondary: #00ffff;
+  --accent-primary: #00ffff;
+  --accent-secondary: #ff00ff;
+}
+
+.dark .retro-high-contrast {
+  --text-primary: #ffffff;
+  --text-secondary: #00ffff;
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --border-primary: #00ffff;
+  --border-secondary: #ffffff;
+  --accent-primary: #00ffff;
+  --accent-secondary: #ff00ff;
+}
+
+/* Remove all rounded corners globally for retro theme */
+.retro-theme * {
+  border-radius: 0 !important;
+}
+
+/* Bold thick borders */
+.retro-border-thick {
+  border-width: 4px !important;
+  border-style: solid !important;
+}
+
+/* 3D Button Effect */
+.retro-button-3d {
+  border: 4px solid;
+  border-color: #fff #666 #666 #fff;
+  background: linear-gradient(135deg, #ddd 0%, #aaa 100%);
+  position: relative;
+  transition: all 0.1s ease;
+}
+
+.retro-button-3d:hover {
+  border-color: #fff #888 #888 #fff;
+  background: linear-gradient(135deg, #eee 0%, #bbb 100%);
+}
+
+.retro-button-3d:active {
+  border-color: #666 #fff #fff #666;
+  background: linear-gradient(135deg, #aaa 0%, #ddd 100%);
+  transform: translate(1px, 1px);
+}
+
+.dark .retro-button-3d {
+  border-color: #0ff #006666 #006666 #0ff;
+  background: linear-gradient(135deg, #003333 0%, #001a1a 100%);
+  color: #0ff;
+}
+
+.dark .retro-button-3d:hover {
+  border-color: #0ff #008888 #008888 #0ff;
+  background: linear-gradient(135deg, #004444 0%, #002222 100%);
+}
+
+.dark .retro-button-3d:active {
+  border-color: #006666 #0ff #0ff #006666;
+  background: linear-gradient(135deg, #001a1a 0%, #003333 100%);
+}

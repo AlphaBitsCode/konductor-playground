@@ -10,10 +10,9 @@ import {
   User,
   Building,
   Bell,
-  Shield,
   Palette,
-  Globe
 } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -34,15 +33,9 @@ const defaultWorkspaceSettings: WorkspaceSettings = {
 };
 
 export default function SettingsPage() {
-  const [theme, setTheme] = useState<Theme>('dark');
+  const { theme, setTheme } = useTheme();
   const [workspaceSettings, setWorkspaceSettings] = useState<WorkspaceSettings>(defaultWorkspaceSettings);
   const [activeTab, setActiveTab] = useState<'workspace' | 'appearance' | 'account' | 'notifications'>('workspace');
-
-  const handleThemeChange = (newTheme: Theme) => {
-    setTheme(newTheme);
-    localStorage.setItem('konductor-theme', newTheme);
-    // Apply theme logic here
-  };
 
   const handleLogout = async () => {
     try {
@@ -193,7 +186,7 @@ export default function SettingsPage() {
                   </label>
                   <div className="flex items-center space-x-4">
                     <button
-                      onClick={() => handleThemeChange('light')}
+                      onClick={() => setTheme('light')}
                       className={`flex items-center space-x-2 px-4 py-3 border-2 transition-colors ${
                         theme === 'light'
                           ? 'dark:bg-amber-600 bg-amber-400 dark:text-white text-stone-900 dark:border-amber-500 border-amber-600'
@@ -205,7 +198,7 @@ export default function SettingsPage() {
                     </button>
                     
                     <button
-                      onClick={() => handleThemeChange('dark')}
+                      onClick={() => setTheme('dark')}
                       className={`flex items-center space-x-2 px-4 py-3 border-2 transition-colors ${
                         theme === 'dark'
                           ? 'dark:bg-cyan-600 bg-cyan-400 dark:text-white text-stone-900 dark:border-cyan-500 border-cyan-600'
@@ -217,7 +210,7 @@ export default function SettingsPage() {
                     </button>
                     
                     <button
-                      onClick={() => handleThemeChange('system')}
+                      onClick={() => setTheme('system')}
                       className={`flex items-center space-x-2 px-4 py-3 border-2 transition-colors ${
                         theme === 'system'
                           ? 'dark:bg-purple-600 bg-purple-400 dark:text-white text-stone-900 dark:border-purple-500 border-purple-600'
