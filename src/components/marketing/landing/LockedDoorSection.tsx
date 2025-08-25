@@ -14,6 +14,7 @@ export const LockedDoorSection = () => {
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   const validateUsername = (username: string): string | null => {
@@ -34,10 +35,46 @@ export const LockedDoorSection = () => {
     return null;
   };
 
+  // Debounced username availability check
+  const checkUsernameAvailability = async (username: string) => {
+    if (username.length < 5) return;
+    
+    setIsCheckingUsername(true);
+    try {
+      const response = await fetch("/api/early-access", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: "test@example.com", username }),
+      });
+
+      const data = await response.json();
+      if (!response.ok && data.error === "Username is already taken") {
+        setUsernameError("Username is already taken");
+      }
+    } catch (error) {
+      // Ignore network errors for real-time checking
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
+
   const handleUsernameChange = (value: string) => {
     setUsername(value);
     const error = validateUsername(value);
     setUsernameError(error);
+
+    // Only check availability if validation passes
+    if (!error && value.length >= 5) {
+      // Debounce the API call
+      const timeoutId = setTimeout(() => {
+        checkUsernameAvailability(value);
+      }, 500);
+      
+      // Clear previous timeout
+      return () => clearTimeout(timeoutId);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,16 +119,9 @@ export const LockedDoorSection = () => {
       }
     } catch (error) {
       console.error("Signup failed:", error);
-      if (
-        error instanceof Error &&
-        error.message.includes("Username is already taken")
-      ) {
-        setUsernameError("Username is already taken");
-      } else {
-        setErrorMsg(
-          "Network error. Please check your connection and try again.",
-        );
-      }
+      setErrorMsg(
+        "Network error. Please check your connection and try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -266,7 +296,7 @@ export const LockedDoorSection = () => {
                               handleUsernameChange(e.target.value)
                             }
                             placeholder="player.name"
-                            className={`w-full pl-8 pr-4 py-3 bg-slate-800 border-2 rounded-lg text-white placeholder-gray-400 focus:outline-none transition-colors duration-200 ${
+                            className={`w-full pl-8 pr-12 py-3 bg-slate-800 border-2 rounded-lg text-white placeholder-gray-400 focus:outline-none transition-colors duration-200 ${
                               usernameError
                                 ? "border-red-400 focus:border-red-400"
                                 : "border-gray-600 focus:border-cyan-400"
@@ -276,6 +306,11 @@ export const LockedDoorSection = () => {
                             minLength={5}
                             maxLength={25}
                           />
+                          {isCheckingUsername && (
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                              <div className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                            </div>
+                          )}
                         </div>
                         <p className="text-xs text-gray-400 mt-1">
                           Alphanumeric only, one dot allowed (5-25 chars)
