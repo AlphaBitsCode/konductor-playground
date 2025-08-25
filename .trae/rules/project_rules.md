@@ -30,10 +30,12 @@ Unlike traditional text-based SaaS interfaces, Konductor.AI provides a 2D pixela
 ## Teaser Website (Live at beta.konductor.ai)
 
 - **Teaser**: Show a scrolling parallax teaser page with waitlist form at the end, which will trigger the waitlist signup process
+- **Pick a username**: alphanumeric only with 25 characters max, strick no unicode.
 
-# Konductor Master Modules
 
-## Onboarding Module (/welcome)
+## Admin Module (Konductor Office, Require super user admin access, Responsive Web Interface)
+
+## Onboarding Module as part of (/office)
 
 - Pick a username: alphanumeric only with 25 characters max, strick no unicode.
 - Name your Assistant: Alita or Tim (placeholder)
@@ -41,7 +43,6 @@ Unlike traditional text-based SaaS interfaces, Konductor.AI provides a 2D pixela
 - To talk to Tim on this platform, and or connect with Telegram: Say Hi to @konductor_ai_bot (send /start) to begin connecting with Konductor AI Personal Assistant
 - Show final page to show connected status, clearly state this idea: Telegram linked @[user_telegram_handle], Tim will assist you via @konductor_ai_bot from now, let's begin
 
-## Admin Module (Konductor Office, Require super user admin access, Responsive Web Interface)
 
 ### Office Portal Layout (admin portal /office)
 
