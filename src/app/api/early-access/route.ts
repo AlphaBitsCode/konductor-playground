@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate username format
+    // Validate username format (double-check on server)
     const usernameRegex = /^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?$/;
     if (username.length < 5 || username.length > 25 || !usernameRegex.test(username)) {
       return NextResponse.json({
@@ -78,12 +78,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check if username is already taken
+    // Final check if username is still available
     try {
       const existingUsernameUser = await pb.collection('users').getFirstListItem(`username = "${username}"`);
       if (existingUsernameUser) {
         return NextResponse.json({
-          error: 'Username is already taken'
+          error: 'Username is no longer available. Please choose another.'
         }, { status: 400 });
       }
     } catch (err) {

@@ -16,6 +16,7 @@ export const LockedDoorSection = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   const validateUsername = (username: string): string | null => {
@@ -41,21 +42,28 @@ export const LockedDoorSection = () => {
     if (username.length < 5) return;
 
     setIsCheckingUsername(true);
+    setUsernameAvailable(false);
     try {
-      const response = await fetch("/api/early-access", {
+      const response = await fetch("/api/check-username", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: "test@example.com", username }),
+        body: JSON.stringify({ username }),
       });
 
       const data = await response.json();
-      if (!response.ok && data.error === "Username is already taken") {
-        setUsernameError("Username is already taken");
+      if (response.ok && data.available) {
+        setUsernameAvailable(true);
+        setUsernameError(null);
+      } else if (!data.available) {
+        setUsernameError(data.error || "Username is not available");
+        setUsernameAvailable(false);
       }
     } catch (error) {
       // Ignore network errors for real-time checking
+      setUsernameError(null);
+      setUsernameAvailable(false);
     } finally {
       setIsCheckingUsername(false);
     }
@@ -63,6 +71,7 @@ export const LockedDoorSection = () => {
 
   const handleUsernameChange = (value: string) => {
     setUsername(value);
+    setUsernameAvailable(false);
     const error = validateUsername(value);
     setUsernameError(error);
 
@@ -86,10 +95,13 @@ export const LockedDoorSection = () => {
       !username ||
       usernameValidationError ||
       usernameError ||
-      isCheckingUsername
+      isCheckingUsername ||
+      !usernameAvailable
     ) {
       if (usernameValidationError) {
         setUsernameError(usernameValidationError);
+      } else if (!usernameAvailable && !usernameError) {
+        setUsernameError("Please wait for username availability check");
       }
       return;
     }
@@ -372,6 +384,8 @@ export const LockedDoorSection = () => {
                             className={`w-full pl-8 pr-12 py-3 bg-slate-800 border-2 rounded-lg text-white placeholder-gray-400 focus:outline-none transition-colors duration-200 ${
                               usernameError
                                 ? "border-red-400 focus:border-red-400"
+                                : usernameAvailable
+                                ? "border-green-400 focus:border-green-400"
                                 : "border-gray-600 focus:border-cyan-400"
                             }`}
                             required
@@ -379,11 +393,18 @@ export const LockedDoorSection = () => {
                             minLength={5}
                             maxLength={25}
                           />
-                          {isCheckingUsername && (
-                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                            {isCheckingUsername && (
                               <div className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-                            </div>
-                          )}
+                            )}
+                            {!isCheckingUsername && usernameAvailable && !usernameError && (
+                              <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <p className="text-xs text-gray-400 mt-1">
                           Alphanumeric only, one dot allowed (5-25 chars)
@@ -399,7 +420,7 @@ export const LockedDoorSection = () => {
                     <button
                       type="submit"
                       disabled={
-                        !username || !!usernameError || isCheckingUsername
+                        !username || !!usernameError || isCheckingUsername || !usernameAvailable
                       }
                       className="w-full pixel-button glassmorphism px-6 py-4 rounded-lg border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                     >
