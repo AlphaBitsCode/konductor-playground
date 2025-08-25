@@ -19,43 +19,22 @@ export default function LoginForm() {
   const router = useRouter();
   const [state, formAction] = useActionState(
     async (_: ActionResult, formData: FormData) => {
+      const username = formData.get("username") as string;
+      const accessCode = formData.get("accessCode") as string;
+
       try {
-        return await login(formData);
-      } catch (error) {
-        // Fallback to API call if server action fails
-        console.warn("Server action failed, falling back to API:", error);
-
-        const username = formData.get("username") as string;
-        const accessCode = formData.get("accessCode") as string;
-
-        try {
-          const response = await fetch("/api/login", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username, accessCode }),
-          });
-
-          const data = await response.json();
-
-          if (response.ok && data.success) {
-            // Set client-side auth cookie
-            document.cookie = `pb_auth=${encodeURIComponent(
-              JSON.stringify({
-                token: `beta_${username}_${Date.now()}`,
-                model: data.user,
-              }),
-            )}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=strict${process.env.NODE_ENV === "production" ? "; secure" : ""}`;
-
-            return { success: true };
-          } else {
-            return { success: false, error: data.error || "Login failed" };
-          }
-        } catch (apiError) {
-          console.error("API fallback failed:", apiError);
-          return { success: false, error: "Login failed. Please try again." };
+        const { loginUser } = await import('@/lib/login');
+        
+        const result = await loginUser({ username, accessCode });
+        
+        if (result.success) {
+          return { success: true };
+        } else {
+          return { success: false, error: result.error || "Login failed" };
         }
+      } catch (error) {
+        console.error("Login failed:", error);
+        return { success: false, error: "Login failed. Please try again." };
       }
     },
     initialState,
@@ -68,22 +47,17 @@ export default function LoginForm() {
     }
   }, [state?.success, router]);
 
-  const validateUsername = (username: string): string | null => {
-    if (username.length < 5 || username.length > 25) {
-      return "Username must be between 5 and 25 characters";
-    }
+  const [validationError, setValidationError] = useState<string | null>(null);
 
-    const validPattern = /^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?$/;
-    if (!validPattern.test(username)) {
-      return "Username can only contain letters, numbers, and one dot";
+  const handleUsernameChange = async (value: string) => {
+    setUsername(value);
+    try {
+      const { validateUsername } = await import('@/lib/login');
+      const error = validateUsername(value);
+      setValidationError(error);
+    } catch {
+      setValidationError(null);
     }
-
-    const dotCount = (username.match(/\./g) || []).length;
-    if (dotCount > 1) {
-      return "Username can contain at most one dot";
-    }
-
-    return null;
   };
 
   return (
@@ -129,13 +103,16 @@ export default function LoginForm() {
               type="text"
               required
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => handleUsernameChange(e.target.value)}
               className="w-full pl-8 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
               placeholder="player.designation"
               minLength={5}
               maxLength={25}
               pattern="^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?$"
-            />
+            /></div>
+          {validationError && (
+            <p className="text-xs text-red-400 mt-1">{validationError}</p>
+          )}
           </div>
           <p className="text-xs text-gray-400 mt-1">
             Alphanumeric only, one dot allowed (5-25 chars)
@@ -169,7 +146,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={
-            !username || !accessCode || validateUsername(username) !== null
+            !username || !accessCode || !!validationError
           }
           className="w-full bg-cyan-500 text-white py-2.5 px-4 rounded-lg font-medium
                    hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2

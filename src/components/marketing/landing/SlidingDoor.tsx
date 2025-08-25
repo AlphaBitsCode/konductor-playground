@@ -49,37 +49,18 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
       return;
     }
 
-    // Validate username format before attempting login
-    const usernameValidationError = validateUsername(loginUsername);
-    if (usernameValidationError) {
-      setLoginError(usernameValidationError);
-      return;
-    }
-
     setIsLoggingIn(true);
     setLoginError(null);
 
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          username: loginUsername, 
-          accessCode: loginPassword 
-        }),
+      const { loginUser } = await import('@/lib/login');
+      
+      const result = await loginUser({
+        username: loginUsername,
+        accessCode: loginPassword
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // Set client-side auth cookie
-        document.cookie = `pb_auth=${encodeURIComponent(JSON.stringify({
-          token: `beta_${loginUsername}_${Date.now()}`,
-          model: data.user
-        }))}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=strict${process.env.NODE_ENV === 'production' ? '; secure' : ''}`;
-
+      if (result.success) {
         // Show cryptic success message briefly
         setLoginError(null);
         setShowCrypticMessage(true);
@@ -89,9 +70,8 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
           window.location.href = '/town';
         }, 2000);
       } else {
-        setLoginError(data.error || "Access denied. Invalid credentials or insufficient clearance level.");
+        setLoginError(result.error || "Access denied. Invalid credentials or insufficient clearance level.");
       }
-
     } catch (error) {
       console.error('Login error:', error);
       setLoginError("Connection failed. Network protocols may be compromised.");
@@ -101,25 +81,16 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
   };
 
   // Validate username format
-  const validateUsername = (username: string) => {
+  const validateUsername = async (username: string) => {
     setLoginUsername(username);
-    // Regex: alpha-numeric, 5-25 chars, no space, no dash, 1 dot allowed
-    const isValid = /^[a-zA-Z0-9]{5,25}$|^[a-zA-Z0-9]+\.[a-zA-Z0-9]+$/.test(
-      username,
-    );
-    if (username.length > 0 && username.length < 5) {
-      return "Min 5 characters";
+    
+    try {
+      const { validateUsername: validate } = await import('@/lib/login');
+      const error = validate(username);
+      return error || "";
+    } catch {
+      return "";
     }
-    if (username.length > 25) {
-      return "Max 25 characters";
-    }
-    if (username.includes(" ") || username.includes("-")) {
-      return "No spaces or dashes";
-    }
-    if (username.split(".").length > 2) {
-      return "Only one dot allowed";
-    }
-    return ""; // No error
   };
 
   // Calculate when the character is approaching the bottom
@@ -262,9 +233,9 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
                   id="login-username"
                   type="text"
                   value={loginUsername}
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const target = e.target as HTMLInputElement;
-                    const validationError = validateUsername(target.value);
+                    const validationError = await validateUsername(target.value);
                     setLoginUsername(target.value);
                     setLoginError(validationError); // Show validation error immediately
                   }}
@@ -314,7 +285,7 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
                 </button>
                 <button
                   type="submit"
-                  disabled={!loginUsername || !loginPassword || isLoggingIn || !!validateUsername(loginUsername)}
+                  disabled={!loginUsername || !loginPassword || isLoggingIn}
                   className="flex-1 pixel-font text-sm px-4 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoggingIn ? (
