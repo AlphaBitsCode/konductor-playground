@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { PixelWindow } from "@/components/ui/PixelWindow";
 import { PixelDialog } from "@/components/ui/PixelDialog";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 type ConnectionStatus = {
   id: string;
@@ -468,18 +469,26 @@ export default function MessagesPage() {
   );
 
   return (
-    <div className="retro-theme retro-high-contrast p-8 space-y-6 min-h-screen">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-press-start text-2xl dark:text-white text-stone-900 mb-2">
-            Message Center
-          </h1>
-          <p className="font-jersey dark:text-slate-300 text-stone-700">
-            Manage your communication channels and view all incoming messages.
-          </p>
-        </div>
-      </div>
+    <div>
+      <PageHeader 
+        title="Messages"
+        subtitle="Communication Hub"
+        breadcrumbs={[{ label: 'Messages' }]}
+        actions={
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4 text-xs">
+              <div className="flex items-center space-x-2 px-2 py-1 dark:bg-slate-800/50 bg-stone-200/50 border border-slate-600">
+                <span className="font-jersey dark:text-slate-300 text-stone-700">{messages.length} Messages</span>
+              </div>
+              <div className="flex items-center space-x-2 px-2 py-1 dark:bg-slate-800/50 bg-stone-200/50 border border-slate-600">
+                <span className="font-jersey dark:text-blue-300 text-blue-700">{connections.filter(c => c.connected).length} Connected</span>
+              </div>
+            </div>
+          </div>
+        }
+      />
+      
+      <div className="retro-theme retro-high-contrast p-4 space-y-4 pt-2 min-h-screen">
 
       {/* Tab Navigation */}
       <div className="flex space-x-4">
@@ -572,6 +581,7 @@ export default function MessagesPage() {
           </div>
         )}
       </PixelDialog>
+      </div>
     </div>
   );
 }

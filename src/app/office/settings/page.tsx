@@ -13,6 +13,7 @@ import {
   Palette,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -47,61 +48,56 @@ export default function SettingsPage() {
   };
 
   const tabs = [
-    { id: 'workspace' as const, label: 'Workspace', icon: Building },
-    { id: 'appearance' as const, label: 'Appearance', icon: Palette },
-    { id: 'account' as const, label: 'Account', icon: User },
-    { id: 'notifications' as const, label: 'Notifications', icon: Bell },
+    { id: 'workspace' as const, label: 'Workspace', icon: Building, number: '1' },
+    { id: 'appearance' as const, label: 'Appearance', icon: Palette, number: '2' },
+    { id: 'account' as const, label: 'Account', icon: User, number: '3' },
+    { id: 'notifications' as const, label: 'Notifications', icon: Bell, number: '4' },
   ];
 
   return (
-    <div className="p-6 space-y-6 min-h-screen">
-      {/* Header */}
-      <div className="pixel-corners--wrapper">
-        <div className="pixel-corners p-6">
-        <div className="flex items-center space-x-3">
-          <Settings className="h-8 w-8 dark:text-cyan-400 text-amber-600" />
-          <div>
-            <h1 className="text-3xl font-press-start dark:text-white text-stone-800">
-              Settings
-            </h1>
-            <p className="dark:text-slate-400 text-stone-600 font-jersey text-lg mt-2">
-              Manage your workspace and preferences
-            </p>
-          </div>
-        </div>
-      </div>
-      </div>
+    <div>
+      <PageHeader 
+         title="Settings"
+         subtitle="Workspace Configuration"
+         breadcrumbs={[{ label: 'Settings' }]}
+       />
+      
+      <div className="p-4 space-y-4 pt-2 min-h-screen">
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Settings Navigation */}
-        <div className="lg:col-span-1">
-          <div className="pixel-corners--wrapper">
-            <div className="pixel-corners p-4">
-            <nav className="space-y-2">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 text-left font-jersey transition-colors ${
-                      activeTab === tab.id
-                        ? 'dark:bg-cyan-500/30 dark:text-cyan-400 bg-amber-200/80 text-amber-800 border-2 dark:border-cyan-500/50 border-amber-400/60'
-                        : 'dark:text-slate-300 text-stone-700 hover:dark:text-white hover:text-stone-900 hover:dark:bg-slate-700/50 hover:bg-stone-200/70'
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-            </div>
+        {/* Horizontal Tab Navigation */}
+        <div className="mb-6">
+          <div className="flex space-x-1 dark:bg-slate-800/50 bg-stone-200/50 p-1 border-2 dark:border-slate-600 border-stone-400">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 font-press-start text-xs transition-all duration-200 border-2 ${
+                    activeTab === tab.id
+                      ? 'dark:bg-cyan-500/30 dark:text-cyan-400 bg-amber-200/80 text-amber-800 dark:border-cyan-500/50 border-amber-400/60 transform -translate-y-1'
+                      : 'dark:text-slate-300 text-stone-700 hover:dark:text-white hover:text-stone-900 hover:dark:bg-slate-700/30 hover:bg-stone-300/50 dark:border-slate-600 border-stone-400'
+                  }`}
+                >
+                  <div className={`w-6 h-6 flex items-center justify-center border-2 font-bold text-xs ${
+                    activeTab === tab.id 
+                      ? 'dark:border-cyan-400 border-amber-600 dark:text-cyan-400 text-amber-800'
+                      : 'dark:border-slate-400 border-stone-600 dark:text-slate-400 text-stone-600'
+                  }`}>
+                    {tab.number}
+                  </div>
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
+
+      <div className="grid grid-cols-1 gap-6">
 
         {/* Settings Content */}
-        <div className="lg:col-span-3">
+        <div className="w-full">
           <div className="pixel-corners--wrapper">
             <div className="pixel-corners p-6">
             {activeTab === 'workspace' && (
@@ -278,6 +274,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { PixelWindow } from "@/components/ui/PixelWindow";
 import { PixelDialog } from "@/components/ui/PixelDialog";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 type CommunicationChannel = {
   id: string;
@@ -464,11 +465,34 @@ export default function OfficeDashboard() {
   };
 
   return (
-    <div className="retro-theme retro-high-contrast p-8 space-y-6 min-h-screen">
-      {/* Main Dashboard Flow */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div>
+      <PageHeader 
+        title="Dashboard"
+        subtitle="Workspace Overview"
+        breadcrumbs={[]}
+        actions={
+          <div className="flex items-center space-x-4 text-xs">
+            <div className="flex items-center space-x-2 px-3 py-1 dark:bg-slate-800/50 bg-stone-200/50 border border-slate-600">
+                <MessageCircle className="h-3 w-3 dark:text-cyan-400 text-amber-600" />
+                <span className="font-jersey dark:text-slate-300 text-stone-700">0 Messages</span>
+              </div>
+              <div className="flex items-center space-x-2 px-3 py-1 dark:bg-slate-800/50 bg-stone-200/50 border border-slate-600">
+                <Settings className="h-3 w-3 dark:text-green-400 text-green-600" />
+                <span className="font-jersey dark:text-slate-300 text-stone-700">{connectedChannels}/{totalChannels} Channels</span>
+              </div>
+              <div className="flex items-center space-x-2 px-3 py-1 dark:bg-slate-800/50 bg-stone-200/50 border border-slate-600">
+                <CheckSquare className="h-3 w-3 dark:text-blue-400 text-blue-600" />
+                <span className="font-jersey dark:text-slate-300 text-stone-700">{completedTodos}/{totalTodos} Tasks</span>
+              </div>
+          </div>
+        }
+      />
+      
+      <div className="retro-theme retro-high-contrast p-4 space-y-4 pt-2 min-h-screen">
+        {/* Main Dashboard Flow */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Communication Channels Column */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-3">
           <PixelWindow 
             title="Channels" 
             stats={`${connectedChannels}/${totalChannels}`}
@@ -505,7 +529,7 @@ export default function OfficeDashboard() {
         
 
         {/* Right Side Sections */}
-        <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Timeline Section */}
           <PixelWindow title="Timeline" stats="0 events">
             <div className="space-y-3">
@@ -578,17 +602,18 @@ export default function OfficeDashboard() {
             </div>
           </PixelWindow>
         </div>
-      </div>
 
-      {/* Channel Connection Dialog */}
-      <PixelDialog
-        isOpen={showChannelDialog}
-        onClose={handleClose}
-        title={selectedChannel ? `Connect ${selectedChannel.name}` : 'Connect Channel'}
-        size="md"
-      >
-        {renderConnectionContent()}
-      </PixelDialog>
-    </div>
-  );
+        {/* Channel Connection Dialog */}
+         <PixelDialog
+           isOpen={showChannelDialog}
+           onClose={handleClose}
+           title={selectedChannel ? `Connect ${selectedChannel.name}` : 'Connect Channel'}
+           size="md"
+         >
+           {renderConnectionContent()}
+         </PixelDialog>
+         </div>
+       </div>
+     </div>
+   );
 }

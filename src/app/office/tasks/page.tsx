@@ -157,7 +157,6 @@ export default function TasksPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <PixelWindow title="Task Lists & Reminders" className="h-full">
         {/* Header */}
         <div className="retro-border-thick dark:bg-slate-900/50 bg-stone-100/50 p-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
@@ -397,7 +396,6 @@ export default function TasksPage() {
             </div>
           </div>
         </div>
-      </PixelWindow>
     </div>
   );
 }

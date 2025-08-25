@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { PixelWindow } from "@/components/ui/PixelWindow";
 import { PixelDialog } from "@/components/ui/PixelDialog";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 type MinionTitle = 'Assistant' | 'Writer' | 'Analyst' | 'Comedian' | 'Researcher' | 'Translator' | 'Custom';
 
@@ -304,41 +305,34 @@ export default function WorkshopPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <PixelWindow title="Minion Workshop" className="h-full">
-        {/* Header */}
-        <div className="retro-border-thick dark:bg-slate-900/50 bg-stone-100/50 p-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-            {/* Title and Stats */}
-            <div>
-              <h1 className="font-press-start text-xl dark:text-white text-stone-900 mb-2">MINION WORKSHOP</h1>
-              <div className="flex items-center space-x-6 text-sm dark:text-slate-400 text-stone-600">
-                <div className="flex items-center space-x-1">
-                  <Bot className="h-4 w-4" />
-                  <span className="font-jersey">{minionStats.total} Total</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Zap className="h-4 w-4" />
-                  <span className="font-jersey">{minionStats.active} Active</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Users className="h-4 w-4" />
-                  <span className="font-jersey">{minionStats.totalConversations} Conversations</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Create Button */}
-            <button 
-              onClick={() => setShowCreateDialog(true)}
-              className="retro-button-3d retro-border-thick p-3 font-press-start text-sm dark:text-green-400 text-green-600 flex items-center space-x-2"
-            >
-              <Plus className="h-4 w-4" />
-              <span>CREATE MINION</span>
-            </button>
-          </div>
-          
-          {/* Controls */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 mt-6">
+      <PageHeader 
+         title="Workshop"
+         subtitle="Manage AI Minions"
+         breadcrumbs={[{ label: 'Workshop' }]}
+         actions={
+           <div className="flex items-center space-x-3">
+             <div className="flex items-center space-x-4 text-xs">
+               <div className="flex items-center space-x-2 px-2 py-1 dark:bg-slate-800/50 bg-stone-200/50 border border-slate-600">
+                 <span className="font-jersey dark:text-slate-300 text-stone-700">{filteredMinions.length} Total</span>
+               </div>
+               <div className="flex items-center space-x-2 px-2 py-1 dark:bg-slate-800/50 bg-stone-200/50 border border-slate-600">
+                 <span className="font-jersey dark:text-green-300 text-green-700">{filteredMinions.filter(m => m.isActive).length} Active</span>
+               </div>
+             </div>
+             <button
+               onClick={() => setShowCreateDialog(true)}
+               className="retro-button-3d retro-border-thick px-3 py-2 font-press-start text-xs dark:text-green-400 text-green-600 flex items-center space-x-2"
+             >
+               <Plus className="h-3 w-3" />
+               <span>CREATE</span>
+             </button>
+           </div>
+         }
+       />
+      
+        {/* Compact Controls */}
+        <div className="retro-border-thick dark:bg-slate-900/50 bg-stone-100/50 p-4 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
             {/* Search and Filters */}
             <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               {/* Search */}
@@ -434,7 +428,6 @@ export default function WorkshopPage() {
             viewMode === 'grid' ? renderGridView() : renderListView()
           )}
         </div>
-      </PixelWindow>
     </div>
   );
 }

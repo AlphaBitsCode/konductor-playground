@@ -10,6 +10,21 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        'sans': ['var(--font-jersey-25)', 'sans-serif'],
+        'jersey': ['var(--font-jersey-25)', 'sans-serif'],
+        'press-start': ['var(--font-press-start-2p)', 'monospace'],
+      },
+      fontSize: {
+        'xs': '0.6rem',
+        'sm': '0.7rem', 
+        'base': '0.8rem',
+        'lg': '0.9rem',
+        'xl': '1rem',
+        '2xl': '1.2rem',
+        '3xl': '1.5rem',
+        '4xl': '1.8rem',
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
