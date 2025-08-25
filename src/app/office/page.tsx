@@ -141,17 +141,18 @@ export default function OfficeDashboard() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-press-start text-white mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between retro-window-border dark:bg-slate-900/30 bg-stone-100/60 backdrop-blur-sm p-6 rounded-sm">
+        <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
+        <div className="relative z-10">
+          <h1 className="text-3xl font-press-start dark:text-white text-stone-800 mb-4 glow-text">
             Konductor Office
           </h1>
-          <p className="text-cyan-400 font-jersey text-lg">
+          <p className="dark:text-cyan-400 text-amber-700 font-jersey text-lg">
             Welcome back! Here's what's happening in your AI workspace.
           </p>
         </div>
-        <div className="mt-4 sm:mt-0 text-right">
-          <p className="text-slate-400 text-sm">
+        <div className="relative z-10 mt-4 sm:mt-0 text-right">
+          <p className="dark:text-slate-400 text-stone-600 text-sm font-jersey">
             {currentTime.toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
@@ -159,7 +160,7 @@ export default function OfficeDashboard() {
               day: 'numeric'
             })}
           </p>
-          <p className="text-cyan-400 font-mono text-lg">
+          <p className="dark:text-cyan-400 text-amber-600 font-mono text-lg font-bold">
             {currentTime.toLocaleTimeString('en-US', {
               hour12: false
             })}
@@ -174,25 +175,27 @@ export default function OfficeDashboard() {
           return (
             <div
               key={stat.title}
-              className="bg-gradient-to-br from-slate-900/90 to-purple-900/30 backdrop-blur-lg rounded-xl p-6 border-2 border-cyan-400/30 retro-border hover:border-cyan-400/60 transition-all duration-300"
+              className="retro-window-border dark:bg-slate-900/60 bg-stone-50/80 backdrop-blur-sm p-6 rounded-sm hover:scale-105 transition-all duration-300 relative"
             >
-              <div className="flex items-center justify-between">
+              <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
+              <div className="relative z-10 flex items-center justify-between">
                 <div>
-                  <p className="text-slate-400 text-sm font-jersey">{stat.title}</p>
-                  <p className="text-2xl font-press-start text-cyan-400 mt-1">{stat.value}</p>
+                  <p className="dark:text-slate-400 text-stone-600 text-sm font-jersey">{stat.title}</p>
+                  <p className="text-2xl font-press-start dark:text-cyan-400 text-amber-700 mt-1 glow-text">{stat.value}</p>
                   <div className="flex items-center mt-2">
                     <span className={`text-sm font-jersey ${
-                      stat.changeType === 'positive' ? 'text-green-400' :
-                      stat.changeType === 'negative' ? 'text-red-400' :
-                      'text-slate-400'
+                      stat.changeType === 'positive' ? 'dark:text-green-400 text-green-600' :
+                      stat.changeType === 'negative' ? 'dark:text-red-400 text-red-600' :
+                      'dark:text-slate-400 text-stone-500'
                     }`}>
                       {stat.change}
                     </span>
-                    <span className="text-slate-400 text-sm font-jersey ml-1">from last month</span>
+                    <span className="dark:text-slate-400 text-stone-500 text-sm font-jersey ml-1">from last month</span>
                   </div>
                 </div>
-                <div className="p-3 bg-cyan-400/20 rounded-lg">
-                  <Icon className="h-6 w-6 text-cyan-400" />
+                <div className="retro-window-border dark:bg-cyan-400/20 bg-amber-200/60 p-3 rounded-sm">
+                  <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
+                  <Icon className="relative z-10 h-6 w-6 dark:text-cyan-400 text-amber-700 pixelated" />
                 </div>
               </div>
             </div>
@@ -204,33 +207,36 @@ export default function OfficeDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
         <div className="lg:col-span-2">
-          <div className="bg-gradient-to-br from-slate-900/90 to-purple-900/30 backdrop-blur-lg rounded-xl p-6 border-2 border-cyan-400/30 retro-border">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-press-start text-white">Recent Activity</h2>
-              <button className="text-cyan-400 hover:text-cyan-300 text-sm font-medium transition-colors">
+          <div className="retro-window-border dark:bg-slate-900/60 bg-stone-50/80 backdrop-blur-sm p-6 rounded-sm relative">
+            <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
+            <div className="relative z-10 flex items-center justify-between mb-6">
+              <h2 className="text-xl font-press-start dark:text-white text-stone-800 glow-text">Recent Activity</h2>
+              <button className="retro-button-small dark:text-cyan-400 text-amber-700 hover:dark:text-cyan-300 hover:text-amber-600 text-sm font-medium transition-colors px-3 py-1">
                 View All
               </button>
             </div>
             
-            <div className="space-y-4">
+            <div className="relative z-10 space-y-4">
               {recentActivities.map((activity) => {
                 const Icon = getActivityIcon(activity.type);
                 const colorClass = getActivityColor(activity.type);
                 
                 return (
-                  <div key={activity.id} className="flex items-start space-x-3">
-                    <div className={`p-2 rounded-lg ${colorClass}`}>
-                      <Icon className="h-4 w-4" />
+                  <div key={activity.id} className="flex items-start space-x-3 retro-window-border dark:bg-slate-800/30 bg-stone-100/50 p-3 rounded-sm relative">
+                    <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
+                    <div className={`relative z-10 p-2 rounded-sm retro-window-border ${colorClass}`}>
+                      <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
+                      <Icon className="relative z-10 h-4 w-4 pixelated" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm">{activity.message}</p>
+                    <div className="relative z-10 flex-1 min-w-0">
+                      <p className="dark:text-white text-stone-800 text-sm font-jersey">{activity.message}</p>
                       <div className="flex items-center mt-1 space-x-2">
                         {activity.user && (
-                          <span className="text-cyan-400 text-xs font-medium">
+                          <span className="dark:text-cyan-400 text-amber-600 text-xs font-medium font-press-start">
                             @{activity.user}
                           </span>
                         )}
-                        <span className="text-slate-400 text-xs">{activity.timestamp}</span>
+                        <span className="dark:text-slate-400 text-stone-500 text-xs font-jersey">{activity.timestamp}</span>
                       </div>
                     </div>
                   </div>
@@ -243,25 +249,30 @@ export default function OfficeDashboard() {
         {/* Quick Actions */}
         <div className="space-y-6">
           {/* Quick Stats */}
-          <div className="bg-gradient-to-br from-slate-900/90 to-purple-900/30 backdrop-blur-lg rounded-xl p-6 border-2 border-purple-400/30 retro-border">
-            <h3 className="text-lg font-press-start text-white mb-4">Quick Stats</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-300 text-sm font-jersey">Active Sessions</span>
-                <span className="text-cyan-400 font-press-start text-sm glow-text">247</span>
+          <div className="retro-window-border dark:bg-slate-900/60 bg-stone-50/80 backdrop-blur-sm p-6 rounded-sm relative">
+            <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
+            <h3 className="relative z-10 text-lg font-press-start dark:text-white text-stone-800 mb-4 glow-text">Quick Stats</h3>
+            <div className="relative z-10 space-y-4">
+              <div className="flex items-center justify-between retro-window-border dark:bg-slate-800/30 bg-stone-100/50 p-2 rounded-sm relative">
+                <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
+                <span className="relative z-10 dark:text-slate-300 text-stone-700 text-sm font-jersey">Active Sessions</span>
+                <span className="relative z-10 dark:text-cyan-400 text-amber-600 font-press-start text-sm glow-text">247</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-300 text-sm font-jersey">Messages Today</span>
-                <span className="text-green-400 font-press-start text-sm glow-text">1,892</span>
+              <div className="flex items-center justify-between retro-window-border dark:bg-slate-800/30 bg-stone-100/50 p-2 rounded-sm relative">
+                <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
+                <span className="relative z-10 dark:text-slate-300 text-stone-700 text-sm font-jersey">Messages Today</span>
+                <span className="relative z-10 dark:text-green-400 text-green-600 font-press-start text-sm glow-text">1,892</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-300 text-sm font-jersey">Tasks Completed</span>
-                <span className="text-purple-400 font-press-start text-sm glow-text">156</span>
+              <div className="flex items-center justify-between retro-window-border dark:bg-slate-800/30 bg-stone-100/50 p-2 rounded-sm relative">
+                <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
+                <span className="relative z-10 dark:text-slate-300 text-stone-700 text-sm font-jersey">Tasks Completed</span>
+                <span className="relative z-10 dark:text-purple-400 text-purple-600 font-press-start text-sm glow-text">156</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-300 text-sm">System Health</span>
-                <span className="text-green-400 font-semibold flex items-center">
-                  <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+              <div className="flex items-center justify-between retro-window-border dark:bg-slate-800/30 bg-stone-100/50 p-2 rounded-sm relative">
+                <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
+                <span className="relative z-10 dark:text-slate-300 text-stone-700 text-sm font-jersey">System Health</span>
+                <span className="relative z-10 dark:text-green-400 text-green-600 font-semibold flex items-center">
+                  <div className="w-2 h-2 dark:bg-green-400 bg-green-600 rounded-full mr-2 pixelated"></div>
                   Excellent
                 </span>
               </div>
@@ -269,17 +280,20 @@ export default function OfficeDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-gradient-to-br from-slate-900/90 to-purple-900/30 backdrop-blur-lg rounded-xl p-6 border-2 border-purple-400/30 retro-border">
-            <h3 className="text-lg font-press-start text-white mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <button className="w-full retro-button hover:scale-105 transition-transform duration-200">
+          <div className="retro-window-border dark:bg-slate-900/60 bg-stone-50/80 backdrop-blur-sm p-6 rounded-sm relative">
+            <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
+            <h3 className="relative z-10 text-lg font-press-start dark:text-white text-stone-800 mb-4 glow-text">Quick Actions</h3>
+            <div className="relative z-10 space-y-3">
+              <button className="w-full retro-button hover:scale-105 transition-transform duration-200 py-3 px-4 text-xs">
                 Create New Minion
               </button>
-              <button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-black font-press-start text-xs py-3 px-4 rounded-lg transition-all duration-200 hover:scale-105 border-2 border-purple-400">
-                Upload Document
+              <button className="w-full retro-window-border dark:bg-gradient-to-r dark:from-purple-500 dark:to-pink-500 bg-gradient-to-r from-amber-400 to-orange-500 hover:dark:from-purple-600 hover:dark:to-pink-600 hover:from-amber-500 hover:to-orange-600 dark:text-white text-stone-900 font-press-start text-xs py-3 px-4 rounded-sm transition-all duration-200 hover:scale-105 relative">
+                <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
+                <span className="relative z-10">Upload Document</span>
               </button>
-              <button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-black font-press-start text-xs py-3 px-4 rounded-lg transition-all duration-200 hover:scale-105 border-2 border-green-400">
-                View Analytics
+              <button className="w-full retro-window-border dark:bg-gradient-to-r dark:from-green-500 dark:to-emerald-500 bg-gradient-to-r from-green-400 to-emerald-400 hover:dark:from-green-600 hover:dark:to-emerald-600 hover:from-green-500 hover:to-emerald-500 dark:text-white text-stone-900 font-press-start text-xs py-3 px-4 rounded-sm transition-all duration-200 hover:scale-105 relative">
+                <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
+                <span className="relative z-10">View Analytics</span>
               </button>
             </div>
           </div>
