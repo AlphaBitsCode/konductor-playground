@@ -23,9 +23,15 @@ export async function initializeSampleDataForUser(userId: string, assistantName:
   try {
     console.log('Initializing sample data for user:', userId);
     
+    // Add initial delay to prevent auto-cancellation
+    await delay(200);
+    
     // 1. Create default workspace
     const workspace = await createDefaultWorkspace(userId);
     console.log('Created workspace:', workspace.id);
+    
+    // Add delay before next operation
+    await delay(300);
     
     // 2. Initialize communication channels
     const channels = await initializeDefaultChannels(workspace.id);

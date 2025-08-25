@@ -11,9 +11,10 @@ import { OnboardingChannels } from "@/components/office/OnboardingChannels";
 import { Timeline } from "@/components/office/Timeline";
 import { TasksList } from "@/components/office/TasksList";
 import { CalendarWidget } from "@/components/office/CalendarWidget";
-import { getCurrentUser, getUserDefaultWorkspace, getWorkspaceStats } from "@/lib/pocketbase-utils";
-import { User, Workspace } from "@/lib/types";
+import { getCurrentUser, getUserDefaultWorkspace, getWorkspaceStats, getWorkspaceChannels } from "@/lib/pocketbase-utils";
+import { User, Workspace, Channel } from "@/lib/types";
 import { initializeSampleDataForUser } from "@/lib/sample-data";
+import { OnboardingFlow } from "@/components/office/OnboardingFlow";
 
 export default function OfficeDashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -26,6 +27,8 @@ export default function OfficeDashboard() {
     totalMessages: 0
   });
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [whatsappChannel, setWhatsappChannel] = useState<Channel | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -59,11 +62,32 @@ export default function OfficeDashboard() {
       
       const workspaceStats = await getWorkspaceStats(defaultWorkspace.id);
       setStats(workspaceStats);
+      
+      // Check if user needs onboarding (no connected channels)
+      const channels = await getWorkspaceChannels(defaultWorkspace.id);
+      const connectedChannels = channels.filter(ch => ch.status === 'connected');
+      const whatsappCh = channels.find(ch => ch.type === 'whatsapp');
+      setWhatsappChannel(whatsappCh || null);
+      
+      // Show onboarding if no channels are connected and user is in onboarding status
+      if (connectedChannels.length === 0 && currentUser.status === 'onboarding') {
+        setShowOnboarding(true);
+      }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    // Refresh data after onboarding completion
+    loadDashboardData();
+  };
+
+  const handleOnboardingClose = () => {
+    setShowOnboarding(false);
   };
 
 
@@ -118,6 +142,14 @@ export default function OfficeDashboard() {
           </div>
         </div>
       </div>
+      
+      {/* Onboarding Flow */}
+      <OnboardingFlow
+        isOpen={showOnboarding}
+        onClose={handleOnboardingClose}
+        onComplete={handleOnboardingComplete}
+        channelId={whatsappChannel?.id}
+      />
     </div>
   );
 }

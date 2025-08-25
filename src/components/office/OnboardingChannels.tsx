@@ -13,6 +13,7 @@ import {
 } from "@/lib/pocketbase-utils";
 import { Channel, User, Workspace, WhatsAppQRResponse, WhatsAppStatusResponse } from "@/lib/types";
 import { initializeSampleDataForUser } from "@/lib/sample-data";
+import { OnboardingFlow } from "./OnboardingFlow";
 
 type ConnectionStep = 'initial' | 'qr' | 'connecting' | 'connected';
 
@@ -51,6 +52,7 @@ export function OnboardingChannels({ username }: OnboardingChannelsProps) {
   const [loading, setLoading] = useState(true);
   const [qrData, setQrData] = useState<WhatsAppQRResponse | null>(null);
   const [whatsappStatus, setWhatsappStatus] = useState<WhatsAppStatusResponse | null>(null);
+  const [showOnboardingFlow, setShowOnboardingFlow] = useState(false);
 
   // Load user data and channels on component mount
   useEffect(() => {
@@ -96,9 +98,26 @@ export function OnboardingChannels({ username }: OnboardingChannelsProps) {
   const totalChannels = channels.length;
 
   const handleChannelClick = (channel: Channel) => {
-    setSelectedChannel(channel);
-    setConnectionStep('initial');
-    setShowChannelDialog(true);
+    if (channel.type === 'whatsapp') {
+      // Use the new onboarding flow for WhatsApp
+      setSelectedChannel(channel);
+      setShowOnboardingFlow(true);
+    } else {
+      // Use the old dialog for other channels
+      setSelectedChannel(channel);
+      setConnectionStep('initial');
+      setShowChannelDialog(true);
+    }
+  };
+
+  const handleOnboardingComplete = () => {
+    setShowOnboardingFlow(false);
+    // Refresh channels data
+    loadUserData();
+  };
+
+  const handleOnboardingClose = () => {
+    setShowOnboardingFlow(false);
   };
 
   const handleConnect = async () => {
@@ -656,6 +675,14 @@ export function OnboardingChannels({ username }: OnboardingChannelsProps) {
       >
         {renderConnectionContent()}
       </PixelDialog>
+      
+      {/* New Onboarding Flow for WhatsApp */}
+      <OnboardingFlow
+        isOpen={showOnboardingFlow}
+        onClose={handleOnboardingClose}
+        onComplete={handleOnboardingComplete}
+        channelId={selectedChannel?.id}
+      />
     </div>
   );
 }

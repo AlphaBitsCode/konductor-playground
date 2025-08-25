@@ -129,6 +129,8 @@ export async function initializeDefaultChannels(workspaceId: string): Promise<Ch
     try {
       const channel = await createChannel(channelData);
       channels.push(channel);
+      // Add delay between channel creations to prevent auto-cancellation
+      await new Promise(resolve => setTimeout(resolve, 150));
     } catch (error) {
       console.error(`Error creating ${channelData.name} channel:`, error);
     }
@@ -247,7 +249,20 @@ export async function initializeOnboardingCalendarEvent(workspaceId: string): Pr
 
 // WhatsApp Integration
 export async function getWhatsAppQR(): Promise<WhatsAppQRResponse> {
-  const response = await fetch('https://master.konductor.ai/api/links/wa-qr');
+  // Add cache-busting parameters to prevent browser caching
+  const timestamp = Date.now();
+  const randomCode = Math.random().toString(36).substring(2, 15);
+  const url = `https://master.konductor.ai/api/links/wa-qr?t=${timestamp}&r=${randomCode}`;
+  
+  const response = await fetch(url, {
+    cache: 'no-cache',
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
+  });
+  
   if (!response.ok) {
     throw new Error('Failed to fetch WhatsApp QR code');
   }
@@ -255,11 +270,38 @@ export async function getWhatsAppQR(): Promise<WhatsAppQRResponse> {
 }
 
 export async function getWhatsAppStatus(): Promise<WhatsAppStatusResponse> {
-  const response = await fetch('https://master.konductor.ai/api/links/wa-status');
-  if (!response.ok) {
-    throw new Error('Failed to fetch WhatsApp status');
+  try {
+    // Add cache-busting parameters to prevent browser caching
+    const timestamp = Date.now();
+    const randomCode = Math.random().toString(36).substring(2, 15);
+    const url = `https://master.konductor.ai/api/links/wa-status?t=${timestamp}&r=${randomCode}`;
+    
+    const response = await fetch(url, {
+      cache: 'no-cache',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch WhatsApp status: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    // Handle CORS errors gracefully during development
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      console.warn('WhatsApp status API unavailable (likely CORS issue in development)');
+      // Return a mock response for development
+      return {
+        status: 'scan_to_connect',
+        updated: Date.now()
+      };
+    }
+    throw error;
   }
-  return await response.json();
 }
 
 // Onboarding Operations
