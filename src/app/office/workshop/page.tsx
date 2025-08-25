@@ -13,8 +13,15 @@ import {
   Users,
   Brain,
   Zap,
-  MoreHorizontal
+  MoreHorizontal,
+  Grid3X3,
+  List,
+  Filter,
+  Eye,
+  EyeOff
 } from "lucide-react";
+import { PixelWindow } from "@/components/ui/PixelWindow";
+import { PixelDialog } from "@/components/ui/PixelDialog";
 
 type MinionTitle = 'Assistant' | 'Writer' | 'Analyst' | 'Comedian' | 'Researcher' | 'Translator' | 'Custom';
 
@@ -108,19 +115,19 @@ const titleTemplates = {
 function getTitleColor(title: MinionTitle) {
   switch (title) {
     case 'Assistant':
-      return 'text-blue-400 bg-blue-400/10';
+      return 'dark:text-cyan-400 text-amber-600 dark:bg-cyan-400/10 bg-amber-600/10';
     case 'Writer':
-      return 'text-green-400 bg-green-400/10';
+      return 'dark:text-green-400 text-green-600 dark:bg-green-400/10 bg-green-600/10';
     case 'Analyst':
-      return 'text-purple-400 bg-purple-400/10';
+      return 'dark:text-purple-400 text-purple-600 dark:bg-purple-400/10 bg-purple-600/10';
     case 'Comedian':
-      return 'text-yellow-400 bg-yellow-400/10';
+      return 'dark:text-yellow-400 text-yellow-600 dark:bg-yellow-400/10 bg-yellow-600/10';
     case 'Researcher':
-      return 'text-cyan-400 bg-cyan-400/10';
+      return 'dark:text-cyan-400 text-cyan-600 dark:bg-cyan-400/10 bg-cyan-600/10';
     case 'Translator':
-      return 'text-pink-400 bg-pink-400/10';
+      return 'dark:text-pink-400 text-pink-600 dark:bg-pink-400/10 bg-pink-600/10';
     default:
-      return 'text-slate-400 bg-slate-400/10';
+      return 'dark:text-slate-400 text-stone-600 dark:bg-slate-400/10 bg-stone-600/10';
   }
 }
 
@@ -129,6 +136,9 @@ export default function WorkshopPage() {
   const [selectedTitle, setSelectedTitle] = useState<'all' | MinionTitle>('all');
   const [showInactive, setShowInactive] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedMinion, setSelectedMinion] = useState<Minion | null>(null);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const filteredMinions = minions.filter(minion => {
     const matchesSearch = minion.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -148,281 +158,283 @@ export default function WorkshopPage() {
     avgConversations: Math.round(minions.reduce((sum, m) => sum + m.conversationCount, 0) / minions.length)
   };
 
-  return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-['Press_Start_2P'] text-2xl text-white mb-2">
-            Minion Workshop
-          </h1>
-          <p className="text-slate-300">
-            Create and manage your specialized AI Minions with unique personalities and capabilities.
-          </p>
-        </div>
+  const renderGridView = () => (
+    <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredMinions.map((minion) => {
+        const titleColor = getTitleColor(minion.title);
         
-        <button className="flex items-center space-x-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-colors mt-4 sm:mt-0">
-          <Plus className="h-4 w-4" />
-          <span>Craft New Minion</span>
-        </button>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-400 text-sm font-medium">Total Minions</p>
-              <p className="text-2xl font-bold text-white mt-1">{minionStats.total}</p>
-            </div>
-            <Bot className="h-6 w-6 text-cyan-400" />
-          </div>
-        </div>
-        
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-400 text-sm font-medium">Active</p>
-              <p className="text-2xl font-bold text-white mt-1">{minionStats.active}</p>
-            </div>
-            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-          </div>
-        </div>
-        
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-400 text-sm font-medium">Total Chats</p>
-              <p className="text-2xl font-bold text-white mt-1">{minionStats.totalConversations.toLocaleString()}</p>
-            </div>
-            <Users className="h-6 w-6 text-purple-400" />
-          </div>
-        </div>
-        
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-400 text-sm font-medium">Avg per Minion</p>
-              <p className="text-2xl font-bold text-white mt-1">{minionStats.avgConversations}</p>
-            </div>
-            <Brain className="h-6 w-6 text-yellow-400" />
-          </div>
-        </div>
-      </div>
-
-      {/* Controls */}
-      <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search minions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-            />
-          </div>
-          
-          {/* Title Filter */}
-          <select
-            value={selectedTitle}
-            onChange={(e) => setSelectedTitle(e.target.value as typeof selectedTitle)}
-            className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
-          >
-            <option value="all">All Titles</option>
-            <option value="Assistant">Assistant</option>
-            <option value="Writer">Writer</option>
-            <option value="Analyst">Analyst</option>
-            <option value="Comedian">Comedian</option>
-            <option value="Researcher">Researcher</option>
-            <option value="Translator">Translator</option>
-            <option value="Custom">Custom</option>
-          </select>
-          
-          {/* Show Inactive Toggle */}
-          <label className="flex items-center space-x-2 px-4 py-2 bg-white/10 border border-white/20 rounded-lg cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showInactive}
-              onChange={(e) => setShowInactive(e.target.checked)}
-              className="rounded border-white/20 bg-white/10 text-cyan-500 focus:ring-cyan-400"
-            />
-            <span className="text-white text-sm">Show Inactive</span>
-          </label>
-          
-          {/* View Mode Toggle */}
-          <div className="flex space-x-2">
-            {(['grid', 'list'] as const).map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
-                  viewMode === mode
-                    ? 'bg-cyan-500 text-white'
-                    : 'bg-white/10 text-slate-300 hover:bg-white/20'
-                }`}
-              >
-                {mode}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Minions Display */}
-      <div className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20">
-        <div className="p-6 border-b border-white/10">
-          <h2 className="text-xl font-bold text-white">Your Minions ({filteredMinions.length})</h2>
-        </div>
-        
-        {filteredMinions.length === 0 ? (
-          <div className="p-12 text-center">
-            <Bot className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-            <p className="text-slate-400">No minions found matching your criteria.</p>
-            <button className="mt-4 flex items-center space-x-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-colors mx-auto">
-              <Plus className="h-4 w-4" />
-              <span>Create Your First Minion</span>
-            </button>
-          </div>
-        ) : viewMode === 'grid' ? (
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredMinions.map((minion) => {
-              const titleColor = getTitleColor(minion.title);
+        return (
+          <div key={minion.id} className={`retro-border-thick dark:bg-slate-800/50 bg-stone-200/50 p-6 transition-all hover:dark:bg-slate-700/50 hover:bg-stone-300/50 ${
+            !minion.isActive ? 'opacity-60' : ''
+          }`}>
+            {/* Avatar and Status */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="text-3xl">{minion.avatar || '🤖'}</div>
+                <div>
+                  <h3 className="font-press-start text-sm dark:text-white text-stone-900">{minion.name}</h3>
+                  <span className={`px-2 py-0.5 text-xs font-jersey rounded-full ${titleColor}`}>
+                    {minion.customTitle || minion.title}
+                  </span>
+                </div>
+              </div>
               
-              return (
-                <div key={minion.id} className={`bg-white/5 rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all ${
-                  !minion.isActive ? 'opacity-60' : ''
-                }`}>
-                  {/* Avatar and Status */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="text-3xl">{minion.avatar || '🤖'}</div>
-                      <div>
-                        <h3 className="font-bold text-white">{minion.name}</h3>
-                        <span className={`px-2 py-0.5 text-xs rounded-full ${titleColor}`}>
-                          {minion.customTitle || minion.title}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
+                {minion.isActive ? (
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                ) : (
+                  <div className="w-2 h-2 dark:bg-slate-400 bg-stone-600 rounded-full"></div>
+                )}
+                <button 
+                  onClick={() => {
+                    setSelectedMinion(minion);
+                    setShowConfigDialog(true);
+                  }}
+                  className="p-1 dark:text-slate-400 text-stone-600 hover:dark:text-white hover:text-stone-900 transition-colors"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Persona */}
+            <p className="font-jersey dark:text-slate-300 text-stone-700 text-sm mb-4 line-clamp-3">
+              {minion.persona}
+            </p>
+            
+            {/* Stats */}
+            <div className="flex items-center justify-between text-sm dark:text-slate-400 text-stone-600 mb-4">
+              <div className="flex items-center space-x-1">
+                <Users className="h-4 w-4" />
+                <span className="font-jersey">{minion.conversationCount} chats</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <FileText className="h-4 w-4" />
+                <span className="font-jersey">{minion.documentAccess.length === 1 && minion.documentAccess[0] === 'all' ? 'All docs' : `${minion.documentAccess.length} docs`}</span>
+              </div>
+            </div>
+            
+            {/* Actions */}
+            <div className="flex space-x-2">
+              <button 
+                onClick={() => {
+                  setSelectedMinion(minion);
+                  setShowConfigDialog(true);
+                }}
+                className="flex-1 retro-button-3d retro-border-thick p-2 font-press-start text-xs dark:text-cyan-400 text-amber-600"
+              >
+                EDIT
+              </button>
+              <button className="retro-button-3d retro-border-thick p-2 dark:text-slate-400 text-stone-600">
+                <Settings className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  const renderListView = () => (
+    <div className="p-6">
+      <div className="space-y-4">
+        {filteredMinions.map((minion) => {
+          const titleColor = getTitleColor(minion.title);
+          
+          return (
+            <div key={minion.id} className={`retro-border-thick dark:bg-slate-800/50 bg-stone-200/50 p-4 transition-all hover:dark:bg-slate-700/50 hover:bg-stone-300/50 ${
+              !minion.isActive ? 'opacity-60' : ''
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="text-2xl">{minion.avatar || '🤖'}</div>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-1">
+                      <h3 className="font-press-start text-sm dark:text-white text-stone-900">{minion.name}</h3>
+                      <span className={`px-2 py-0.5 text-xs font-jersey rounded-full ${titleColor}`}>
+                        {minion.customTitle || minion.title}
+                      </span>
                       {minion.isActive ? (
                         <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                       ) : (
-                        <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
+                        <div className="w-2 h-2 dark:bg-slate-400 bg-stone-600 rounded-full"></div>
                       )}
-                      <button className="p-1 text-slate-400 hover:text-white transition-colors">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
                     </div>
-                  </div>
-                  
-                  {/* Persona */}
-                  <p className="text-slate-300 text-sm mb-4 line-clamp-3">
-                    {minion.persona}
-                  </p>
-                  
-                  {/* Stats */}
-                  <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
-                    <div className="flex items-center space-x-1">
-                      <Users className="h-4 w-4" />
-                      <span>{minion.conversationCount} chats</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <FileText className="h-4 w-4" />
-                      <span>{minion.documentAccess.length === 1 && minion.documentAccess[0] === 'all' ? 'All docs' : `${minion.documentAccess.length} docs`}</span>
-                    </div>
-                  </div>
-                  
-                  {/* Actions */}
-                  <div className="flex space-x-2">
-                    <button className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition-colors">
-                      <Edit3 className="h-4 w-4" />
-                      <span>Edit</span>
-                    </button>
-                    <button className="flex items-center justify-center px-3 py-2 bg-white/10 text-slate-400 rounded-lg hover:bg-white/20 hover:text-white transition-colors">
-                      <Settings className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })
-          }
-          </div>
-        ) : (
-          <div className="divide-y divide-white/10">
-            {filteredMinions.map((minion) => {
-              const titleColor = getTitleColor(minion.title);
-              
-              return (
-                <div key={minion.id} className={`p-6 hover:bg-white/5 transition-colors ${
-                  !minion.isActive ? 'opacity-60' : ''
-                }`}>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-4 flex-1">
-                      <div className="text-2xl">{minion.avatar || '🤖'}</div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="font-bold text-white">{minion.name}</h3>
-                          <span className={`px-2 py-0.5 text-xs rounded-full ${titleColor}`}>
-                            {minion.customTitle || minion.title}
-                          </span>
-                          {minion.isActive ? (
-                            <div className="flex items-center space-x-1">
-                              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                              <span className="text-green-400 text-xs">Active</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center space-x-1">
-                              <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
-                              <span className="text-slate-400 text-xs">Inactive</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <p className="text-slate-300 text-sm mb-3 line-clamp-2">
-                          {minion.persona}
-                        </p>
-                        
-                        <div className="flex items-center space-x-6 text-sm text-slate-400">
-                          <div className="flex items-center space-x-1">
-                            <Users className="h-4 w-4" />
-                            <span>{minion.conversationCount} conversations</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <FileText className="h-4 w-4" />
-                            <span>{minion.documentAccess.length === 1 && minion.documentAccess[0] === 'all' ? 'All documents' : `${minion.documentAccess.length} documents`}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Zap className="h-4 w-4" />
-                            <span>Last used {minion.lastUsed}</span>
-                          </div>
-                        </div>
+                    <p className="font-jersey dark:text-slate-300 text-stone-700 text-sm mb-2">
+                      {minion.persona}
+                    </p>
+                    <div className="flex items-center space-x-4 text-xs dark:text-slate-400 text-stone-600">
+                      <div className="flex items-center space-x-1">
+                        <Users className="h-3 w-3" />
+                        <span className="font-jersey">{minion.conversationCount} chats</span>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 ml-4">
-                      <button className="p-2 text-slate-400 hover:text-cyan-400 transition-colors">
-                        <Edit3 className="h-4 w-4" />
-                      </button>
-                      <button className="p-2 text-slate-400 hover:text-white transition-colors">
-                        <Settings className="h-4 w-4" />
-                      </button>
-                      <button className="p-2 text-slate-400 hover:text-red-400 transition-colors">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <div className="flex items-center space-x-1">
+                        <FileText className="h-3 w-3" />
+                        <span className="font-jersey">{minion.documentAccess.length === 1 && minion.documentAccess[0] === 'all' ? 'All docs' : `${minion.documentAccess.length} docs`}</span>
+                      </div>
+                      <span className="font-jersey">Last used: {minion.lastUsed}</span>
                     </div>
                   </div>
                 </div>
-              );
-            })
-          }
-          </div>
-        )}
+                
+                <div className="flex items-center space-x-2">
+                  <button 
+                    onClick={() => {
+                      setSelectedMinion(minion);
+                      setShowConfigDialog(true);
+                    }}
+                    className="retro-button-3d retro-border-thick p-2 font-press-start text-xs dark:text-cyan-400 text-amber-600"
+                  >
+                    EDIT
+                  </button>
+                  <button className="retro-button-3d retro-border-thick p-2 dark:text-slate-400 text-stone-600">
+                    <Settings className="h-4 w-4" />
+                  </button>
+                  <button className="p-1 dark:text-slate-400 text-stone-600 hover:dark:text-white hover:text-stone-900 transition-colors">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
+    </div>
+  );
+
+  return (
+    <div className="h-full flex flex-col">
+      <PixelWindow title="Minion Workshop" className="h-full">
+        {/* Header */}
+        <div className="retro-border-thick dark:bg-slate-900/50 bg-stone-100/50 p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            {/* Title and Stats */}
+            <div>
+              <h1 className="font-press-start text-xl dark:text-white text-stone-900 mb-2">MINION WORKSHOP</h1>
+              <div className="flex items-center space-x-6 text-sm dark:text-slate-400 text-stone-600">
+                <div className="flex items-center space-x-1">
+                  <Bot className="h-4 w-4" />
+                  <span className="font-jersey">{minionStats.total} Total</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Zap className="h-4 w-4" />
+                  <span className="font-jersey">{minionStats.active} Active</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Users className="h-4 w-4" />
+                  <span className="font-jersey">{minionStats.totalConversations} Conversations</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Create Button */}
+            <button 
+              onClick={() => setShowCreateDialog(true)}
+              className="retro-button-3d retro-border-thick p-3 font-press-start text-sm dark:text-green-400 text-green-600 flex items-center space-x-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span>CREATE MINION</span>
+            </button>
+          </div>
+          
+          {/* Controls */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 mt-6">
+            {/* Search and Filters */}
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 dark:text-slate-400 text-stone-600" />
+                <input
+                  type="text"
+                  placeholder="Search minions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="retro-border-thick dark:bg-slate-800 bg-stone-200 dark:text-white text-stone-900 pl-10 pr-4 py-2 font-jersey text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                />
+              </div>
+              
+              {/* Title Filter */}
+              <select
+                value={selectedTitle}
+                onChange={(e) => setSelectedTitle(e.target.value as 'all' | MinionTitle)}
+                className="retro-border-thick dark:bg-slate-800 bg-stone-200 dark:text-white text-stone-900 px-3 py-2 font-jersey text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              >
+                <option value="all">All Titles</option>
+                <option value="Assistant">Assistant</option>
+                <option value="Writer">Writer</option>
+                <option value="Analyst">Analyst</option>
+                <option value="Comedian">Comedian</option>
+                <option value="Researcher">Researcher</option>
+                <option value="Translator">Translator</option>
+                <option value="Custom">Custom</option>
+              </select>
+              
+              {/* Show Inactive Toggle */}
+              <button
+                onClick={() => setShowInactive(!showInactive)}
+                className={`retro-border-thick p-2 font-jersey text-sm flex items-center space-x-2 transition-colors ${
+                  showInactive 
+                    ? 'dark:bg-cyan-400/20 bg-amber-600/20 dark:text-cyan-400 text-amber-600' 
+                    : 'dark:bg-slate-800 bg-stone-200 dark:text-slate-400 text-stone-600'
+                }`}
+              >
+                {showInactive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                <span>Show Inactive</span>
+              </button>
+            </div>
+            
+            {/* View Mode Toggle */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`retro-border-thick p-2 transition-colors ${
+                  viewMode === 'grid' 
+                    ? 'dark:bg-cyan-400/20 bg-amber-600/20 dark:text-cyan-400 text-amber-600' 
+                    : 'dark:bg-slate-800 bg-stone-200 dark:text-slate-400 text-stone-600'
+                }`}
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`retro-border-thick p-2 transition-colors ${
+                  viewMode === 'list' 
+                    ? 'dark:bg-cyan-400/20 bg-amber-600/20 dark:text-cyan-400 text-amber-600' 
+                    : 'dark:bg-slate-800 bg-stone-200 dark:text-slate-400 text-stone-600'
+                }`}
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Content */}
+        <div className="flex-1 overflow-auto">
+          {filteredMinions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full p-8">
+              <Bot className="h-16 w-16 dark:text-slate-400 text-stone-600 mb-4" />
+              <h3 className="font-press-start text-lg dark:text-slate-400 text-stone-600 mb-2">NO MINIONS FOUND</h3>
+              <p className="font-jersey dark:text-slate-500 text-stone-500 text-center max-w-md">
+                {searchQuery || selectedTitle !== 'all' || !showInactive 
+                  ? "Try adjusting your search or filters to find minions."
+                  : "Create your first AI minion to get started with the workshop."}
+              </p>
+              {!searchQuery && selectedTitle === 'all' && showInactive && (
+                <button 
+                  onClick={() => setShowCreateDialog(true)}
+                  className="retro-button-3d retro-border-thick p-3 font-press-start text-sm dark:text-green-400 text-green-600 flex items-center space-x-2 mt-4"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>CREATE FIRST MINION</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            viewMode === 'grid' ? renderGridView() : renderListView()
+          )}
+        </div>
+      </PixelWindow>
     </div>
   );
 }
