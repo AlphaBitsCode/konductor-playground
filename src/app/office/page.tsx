@@ -179,7 +179,7 @@ export default function OfficeDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-slate-400 text-sm font-jersey">{stat.title}</p>
-                  <p className="text-2xl font-press-start text-cyan-400 mt-1 glow-text">{stat.value}</p>
+                  <p className="text-2xl font-press-start text-cyan-400 mt-1">{stat.value}</p>
                   <div className="flex items-center mt-2">
                     <span className={`text-sm font-jersey ${
                       stat.changeType === 'positive' ? 'text-green-400' :

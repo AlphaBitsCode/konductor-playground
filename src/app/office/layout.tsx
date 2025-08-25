@@ -202,7 +202,7 @@ export default function OfficeLayout({
             <div className="space-y-1">
               <Link
                 href="/office/settings"
-                className="group flex items-center w-full px-3 py-2 text-sm font-medium text-slate-300 rounded-lg hover:text-cyan-400 hover:bg-white/10 transition-all duration-200 hover:glow-text"
+                className="group flex items-center w-full px-3 py-2 text-sm font-medium text-slate-300 rounded-lg hover:text-cyan-400 hover:bg-white/10 transition-all duration-200"
               >
                 <Settings className="mr-3 h-4 w-4" />
                 <span className="font-jersey">Settings</span>
@@ -217,7 +217,7 @@ export default function OfficeLayout({
                     console.error('Logout failed:', error);
                   }
                 }}
-                className="group flex items-center w-full px-3 py-2 text-sm font-medium text-slate-300 rounded-lg hover:text-cyan-400 hover:bg-red-500/10 transition-all duration-200 hover:glow-text"
+                className="group flex items-center w-full px-3 py-2 text-sm font-medium text-slate-300 rounded-lg hover:text-cyan-400 hover:bg-red-500/10 transition-all duration-200"
               >
                 <LogOut className="mr-3 h-4 w-4" />
                 <span className="font-jersey">Logout</span>
@@ -238,10 +238,12 @@ export default function OfficeLayout({
             <Menu className="h-6 w-6" />
           </button>
           <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 bg-gradient-to-br from-cyan-400 to-purple-500 rounded flex items-center justify-center pixelated retro-border">
-              <span className="text-black font-press-start text-xs glow-text">K</span>
-            </div>
-            <span className="text-lg font-press-start text-white glow-text">Konductor</span>
+            <img 
+              src="/logos/k_logo.png" 
+              alt="Konductor Logo" 
+              className="w-6 h-6 object-contain"
+            />
+            <span className="text-lg font-press-start text-white">Konductor</span>
           </div>
           <div className="w-6" /> {/* Spacer */}
         </div>

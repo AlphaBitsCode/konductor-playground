@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { AnimatedEmailIcon } from "@/components/ui/AnimatedEmailIcon";
+import { checkAuthStatus } from "@/lib/auth";
 
 export const LockedDoorSection = () => {
   const [email, setEmail] = useState("");
@@ -19,6 +21,8 @@ export const LockedDoorSection = () => {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authUser, setAuthUser] = useState<any>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   const validateUsername = (username: string): string | null => {
@@ -214,6 +218,11 @@ export const LockedDoorSection = () => {
   };
 
   useEffect(() => {
+    // Check authentication status
+    const authStatus = checkAuthStatus();
+    setIsAuthenticated(authStatus.isAuthenticated);
+    setAuthUser(authStatus.user);
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry && entry.isIntersecting) {
@@ -259,7 +268,65 @@ export const LockedDoorSection = () => {
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
         <div className="transform origin-center">
-          {!showForm ? (
+          {isAuthenticated ? (
+            /* Authenticated User Welcome */
+            <div className="space-y-8">
+              <div className="space-y-4 mb-24">
+                <h2 className="pixel-font text-3xl md:text-5xl text-white mb-4">
+                  <span className="bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">
+                    WELC0ME BACK
+                  </span>
+                </h2>
+                <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto">
+                  {authUser?.name ? `Hello, @${authUser.name}!` : 'Hello, Agent!'} Your access has been verified.
+                </p>
+              </div>
+
+              {/* Welcome Door/Portal */}
+              <div className="relative mx-auto w-80 h-96 perspective-1000">
+                <div className="relative w-full h-full glassmorphism rounded-2xl border-4 border-green-500 transition-transform duration-300 hover:scale-105">
+                  {/* Door Surface */}
+                  <div className="absolute inset-4 bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl">
+                    {/* Door Panels */}
+                    <div className="absolute top-6 left-6 right-6 h-32 border-2 border-gray-600 rounded" />
+                    <div className="absolute bottom-6 left-6 right-6 h-32 border-2 border-gray-600 rounded" />
+
+                    {/* Success Icon */}
+                    <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                      <div className="text-6xl">✅</div>
+                    </div>
+
+                    {/* Access Granted Badge */}
+                    <div className="absolute bottom-10 right-10 pointer-events-none select-none transform -rotate-12">
+                      <span className="text-xs tracking-widest text-green-400 opacity-60">
+                        VERIFIED
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Status Signs */}
+                  <div className="absolute -top-12 left-1/2 transform -translate-x-1/2">
+                    <div className="glassmorphism px-4 py-2 rounded border-2 border-green-400">
+                      <span className="pixel-font text-sm text-green-400">
+                        ACCESS GRANTED
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
+                    <Link
+                      href="/office"
+                      className="glassmorphism px-6 py-3 rounded border-2 border-cyan-400 hover:bg-cyan-400 hover:text-slate-900 transition-all duration-300 inline-block"
+                    >
+                      <span className="pixel-font text-lg text-cyan-400 hover:text-slate-900">
+                        ENTER OFFICE
+                      </span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : !showForm ? (
             /* Locked Door Scene */
             <div className="space-y-8">
               <div className="space-y-4 mb-24">

@@ -67,6 +67,15 @@ export async function loginUser(credentials: LoginCredentials): Promise<LoginRes
     const authData = await pb.collection('users').authWithPassword(email, password);
     
     if (pb.authStore.isValid && authData.record) {
+      // Set the authentication cookie for server-side middleware
+      if (typeof document !== 'undefined') {
+        const authCookie = JSON.stringify({
+          token: pb.authStore.token,
+          model: authData.record
+        });
+        document.cookie = `pb_auth=${encodeURIComponent(authCookie)}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+      }
+      
       return {
         success: true,
         user: {
@@ -108,9 +117,9 @@ export function logoutUser(): void {
   // Clear PocketBase auth store
   pb.authStore.clear();
   
-  // Clear any client-side cookies if they exist
+  // Clear the authentication cookie
   if (typeof document !== 'undefined') {
-    document.cookie = 'pb_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    document.cookie = 'pb_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax';
   }
 }
 

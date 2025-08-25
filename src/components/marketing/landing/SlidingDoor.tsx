@@ -2,6 +2,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { loginUser, validateEmail, validatePassword } from "@/lib/login";
 
 type SlidingDoorProps = {
@@ -9,6 +10,7 @@ type SlidingDoorProps = {
 };
 
 export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
+  const router = useRouter();
   const [doorPosition, setDoorPosition] = useState(100);
   const [totalPageHeight, setTotalPageHeight] = useState(0);
   const doorRef = useRef<HTMLDivElement>(null);
@@ -67,7 +69,7 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
         setShowCrypticMessage(true);
 
         setTimeout(() => {
-          window.location.href = '/office';
+          router.push('/office');
         }, 2000);
       } else {
         setLoginError(result.error || "Access denied. Invalid credentials or insufficient clearance level.");

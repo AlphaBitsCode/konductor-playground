@@ -40,9 +40,9 @@ export function middleware(request: NextRequest) {
   }
   const isAuthenticated = token && !isTokenExpired(token);
 
-  // Redirect authenticated users away from auth pages to town
+  // Redirect authenticated users away from auth pages to office
   if (isAuthPath && isAuthenticated) {
-    return NextResponse.redirect(new URL("/town", request.url));
+    return NextResponse.redirect(new URL("/office", request.url));
   }
 
   // Redirect unauthenticated users from protected paths to login
@@ -55,10 +55,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Redirect authenticated users from root to town
-  if (url.pathname === "/" && isAuthenticated) {
-    return NextResponse.redirect(new URL("/town", request.url));
-  }
+  // Allow authenticated users to view landing page
+  // Removed auto-redirect to /office from root path
 
   return NextResponse.next();
 }
