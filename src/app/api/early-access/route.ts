@@ -22,6 +22,18 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Check if username is already taken
+    try {
+      const existingUser = await pb.collection('users').getFirstListItem(`username = "${username}"`);
+      if (existingUser) {
+        return NextResponse.json({
+          error: 'Username is already taken'
+        }, { status: 400 });
+      }
+    } catch (err) {
+      // Username not found, which is good - continue
+    }
+
 
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       return NextResponse.json(

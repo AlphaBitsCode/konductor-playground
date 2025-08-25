@@ -82,7 +82,11 @@ export const LockedDoorSection = () => {
       }
     } catch (error) {
       console.error('Signup failed:', error);
-      setErrorMsg('Network error. Please check your connection and try again.');
+      if (error instanceof Error && error.message.includes('Username is already taken')) {
+        setUsernameError('Username is already taken');
+      } else {
+        setErrorMsg('Network error. Please check your connection and try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -231,22 +235,26 @@ export const LockedDoorSection = () => {
                     <div className="glassmorphism rounded-lg p-6 space-y-4">
                       <div>
                         <label htmlFor="early-access-username" className="block pixel-font text-sm text-cyan-400 mb-2">
-                          Username
+                          Username <span className="text-orange-400">*IMPORTANT*</span>
                         </label>
-                        <input
-                          id="early-access-username"
-                          type="text"
-                          value={username}
-                          onChange={e => handleUsernameChange(e.target.value)}
-                          placeholder="player.name"
-                          className={`w-full px-4 py-3 bg-slate-800 border-2 rounded-lg text-white placeholder-gray-400 focus:outline-none transition-colors duration-200 ${
-                            usernameError ? 'border-red-400 focus:border-red-400' : 'border-gray-600 focus:border-cyan-400'
-                          }`}
-                          required
-                          disabled={isSubmitting}
-                          minLength={5}
-                          maxLength={25}
-                        />
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-400 pixel-font text-sm">@</span>
+                          <input
+                            id="early-access-username"
+                            type="text"
+                            value={username}
+                            onChange={e => handleUsernameChange(e.target.value)}
+                            placeholder="player.name"
+                            className={`w-full pl-8 pr-4 py-3 bg-slate-800 border-2 rounded-lg text-white placeholder-gray-400 focus:outline-none transition-colors duration-200 ${
+                              usernameError ? 'border-red-400 focus:border-red-400' : 'border-gray-600 focus:border-cyan-400'
+                            }`}
+                            required
+                            disabled={isSubmitting}
+                            minLength={5}
+                            maxLength={25}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">Alphanumeric only, one dot allowed (5-25 chars)</p>
                         {usernameError && (
                           <p className="text-red-400 text-xs mt-1">{usernameError}</p>
                         )}
@@ -270,13 +278,13 @@ export const LockedDoorSection = () => {
                       </div>
 
                       <div className="text-xs text-gray-400 text-left">
-                        • Get exclusive beta access
+                        • Classified access credentials
                         <br />
-                        • Early feature previews
+                        • Experimental features unlock
                         <br />
-                        • Direct feedback channel
+                        • Direct neural interface
                         <br />
-                        • Special launch pricing
+                        • Priority queue assignment
                       </div>
                     </div>
 
@@ -311,7 +319,7 @@ export const LockedDoorSection = () => {
                   <h3 className="pixel-font text-xl text-cyan-400 mb-4">INVITATION SENT!</h3>
                   <div className="space-y-3">
                     <p className="text-gray-300 text-sm">
-                      A verification email has been sent to confirm your slot.
+                      Your access code has been dispatched. Check your secure channel.
                     </p>
                     {queuePosition && (
                       <div className="glassmorphism bg-slate-800/50 rounded-lg p-4 border border-cyan-400/30">

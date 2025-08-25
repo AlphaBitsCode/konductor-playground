@@ -264,6 +264,34 @@
         "type": "text"
       },
       {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text1579384327",
+        "max": 25,
+        "min": 5,
+        "name": "username",
+        "pattern": "^[a-zA-Z0-9]+(\\.?[a-zA-Z0-9]+)*$",
+        "presentable": false,
+        "primaryKey": false,
+        "required": true,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text1579384328",
+        "max": 6,
+        "min": 6,
+        "name": "betaAccessCode",
+        "pattern": "^[0-9]{6}$",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
         "hidden": false,
         "id": "file376926767",
         "maxSelect": 1,
@@ -326,7 +354,8 @@
     ],
     "indexes": [
       "CREATE UNIQUE INDEX `idx_tokenKey__pb_users_auth_` ON `users` (`tokenKey`)",
-      "CREATE UNIQUE INDEX `idx_email__pb_users_auth_` ON `users` (`email`) WHERE `email` != ''"
+      "CREATE UNIQUE INDEX `idx_email__pb_users_auth_` ON `users` (`email`) WHERE `email` != ''",
+      "CREATE UNIQUE INDEX `idx_username__pb_users_auth_` ON `users` (`username`) WHERE `username` != ''"
     ],
     "system": false,
     "authRule": "",
