@@ -14,7 +14,7 @@ export function middleware(request: NextRequest) {
   }
 
   // 2) Authentication logic
-  const protectedPaths = ["/dashboard", "/office"];
+  const protectedPaths = ["/dashboard", "/office", "/town"];
   const isProtectedPath = protectedPaths.some((path) =>
     url.pathname.startsWith(path)
   );
@@ -25,8 +25,8 @@ export function middleware(request: NextRequest) {
     url.pathname.startsWith(path)
   );
 
-  // Public auth paths (login, register, email verification)
-  const authPaths = ["/login", "/register", "/verify-email"];
+  // Public auth paths (login, email verification) - removed register
+  const authPaths = ["/login", "/verify-email"];
   const isAuthPath = authPaths.some((path) =>
     url.pathname.startsWith(path)
   );
@@ -40,9 +40,9 @@ export function middleware(request: NextRequest) {
   }
   const isAuthenticated = token && !isTokenExpired(token);
 
-  // Redirect authenticated users away from auth pages
+  // Redirect authenticated users away from auth pages to town
   if (isAuthPath && isAuthenticated) {
-    return NextResponse.redirect(new URL("/office", request.url));
+    return NextResponse.redirect(new URL("/town", request.url));
   }
 
   // Redirect unauthenticated users from protected paths to login
@@ -52,12 +52,12 @@ export function middleware(request: NextRequest) {
 
   // Handle onboarding flow - requires authentication but allows incomplete profiles
   if (isOnboardingPath && !isAuthenticated) {
-    return NextResponse.redirect(new URL("/register", request.url));
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Redirect authenticated users from root to office
+  // Redirect authenticated users from root to town
   if (url.pathname === "/" && isAuthenticated) {
-    return NextResponse.redirect(new URL("/office", request.url));
+    return NextResponse.redirect(new URL("/town", request.url));
   }
 
   return NextResponse.next();

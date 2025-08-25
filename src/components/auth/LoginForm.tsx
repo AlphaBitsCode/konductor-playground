@@ -35,7 +35,7 @@ export default function LoginForm() {
   // Redirect on success
   useEffect(() => {
     if (state?.success) {
-      router.push("/office");
+      router.push("/town");
     }
   }, [state?.success, router]);
 

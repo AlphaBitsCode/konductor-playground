@@ -11,12 +11,11 @@ import {
   CheckSquare,
   Calendar,
   Wrench,
-  Settings,
-  LogOut,
   Menu,
   X,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Users,
 } from "lucide-react";
 
 type NavigationItem = {
@@ -61,6 +60,11 @@ const navigation: NavigationItem[] = [
     href: "/office/workshop",
     icon: Wrench,
   },
+  {
+    name: "Town",
+    href: "/town",
+    icon: Users,
+  },
 ];
 
 function NavigationItem({ item, isExpanded, onToggle }: {
@@ -97,7 +101,7 @@ function NavigationItem({ item, isExpanded, onToggle }: {
           </div>
         )}
       </Link>
-      
+
       {hasChildren && isExpanded && (
         <div className="ml-6 mt-1 space-y-1">
           {item.children!.map((child) => (
@@ -192,7 +196,7 @@ export default function OfficeLayout({
                 <p className="text-slate-400 text-xs">admin@konductor.ai</p>
               </div>
             </div>
-            
+
             <div className="space-y-1">
               <Link
                 href="/office/settings"
@@ -201,7 +205,7 @@ export default function OfficeLayout({
                 <Settings className="mr-3 h-4 w-4" />
                 <span className="font-jersey">Settings</span>
               </Link>
-              
+
               <button
                 onClick={async () => {
                   try {
