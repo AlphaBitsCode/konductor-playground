@@ -649,8 +649,8 @@ body {
 
 /* Font Size Control System */
 :root {
-  --font-size-xs: 1rem;       /* 16px - Small labels, captions */
-  --font-size-sm: 1rem;       /* 16px - Body text, descriptions */
+  --font-size-xs: 0.8rem;       /* 16px - Small labels, captions */
+  --font-size-sm: 0.9rem;       /* 16px - Body text, descriptions */
   --font-size-base: 1rem;     /* 16px - Default body text */
   --font-size-md: 1.1rem;     /* 18px - Section content */
   --font-size-lg: 1.1rem;     /* 18px - Section headings */
