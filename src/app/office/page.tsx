@@ -1,300 +1,269 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
-  Users,
-  Bot,
-  FileText,
   MessageCircle,
-  TrendingUp,
+  Mail,
   Calendar,
   CheckSquare,
-  Activity
+  Clock,
+  ChevronDown,
+  ArrowRight,
+  ArrowDown
 } from "lucide-react";
 
-type StatCard = {
-  title: string;
-  value: string;
-  change: string;
-  changeType: 'positive' | 'negative' | 'neutral';
-  icon: React.ComponentType<{ className?: string }>;
-};
-
-const stats: StatCard[] = [
-  {
-    title: "Total Users",
-    value: "1,247",
-    change: "+12%",
-    changeType: "positive",
-    icon: Users,
-  },
-  {
-    title: "Active Minions",
-    value: "89",
-    change: "+5%",
-    changeType: "positive",
-    icon: Bot,
-  },
-  {
-    title: "Documents",
-    value: "3,456",
-    change: "+23%",
-    changeType: "positive",
-    icon: FileText,
-  },
-  {
-    title: "Conversations",
-    value: "12,890",
-    change: "+8%",
-    changeType: "positive",
-    icon: MessageCircle,
-  },
-];
-
-type RecentActivity = {
+type Workspace = {
   id: string;
-  type: 'user_joined' | 'minion_created' | 'document_uploaded' | 'task_completed';
-  message: string;
-  timestamp: string;
-  user?: string;
+  name: string;
+  isDefault: boolean;
 };
 
-const recentActivities: RecentActivity[] = [
-  {
-    id: "1",
-    type: "user_joined",
-    message: "New user john_doe joined the platform",
-    timestamp: "2 minutes ago",
-    user: "john_doe"
-  },
-  {
-    id: "2",
-    type: "minion_created",
-    message: "AI Minion 'Marketing Assistant' was created",
-    timestamp: "15 minutes ago",
-    user: "sarah_m"
-  },
-  {
-    id: "3",
-    type: "document_uploaded",
-    message: "Document 'Q4 Strategy.pdf' uploaded to Knowledge Library",
-    timestamp: "1 hour ago",
-    user: "mike_chen"
-  },
-  {
-    id: "4",
-    type: "task_completed",
-    message: "Task 'Review marketing materials' marked as completed",
-    timestamp: "2 hours ago",
-    user: "alex_k"
-  },
-  {
-    id: "5",
-    type: "user_joined",
-    message: "New user emma_wilson joined the platform",
-    timestamp: "3 hours ago",
-    user: "emma_wilson"
-  },
+const workspaces: Workspace[] = [
+  { id: "1", name: "Default Workspace", isDefault: true },
+  { id: "2", name: "Marketing Team", isDefault: false },
+  { id: "3", name: "Development", isDefault: false },
 ];
 
-function getActivityIcon(type: RecentActivity['type']) {
-  switch (type) {
-    case 'user_joined':
-      return Users;
-    case 'minion_created':
-      return Bot;
-    case 'document_uploaded':
-      return FileText;
-    case 'task_completed':
-      return CheckSquare;
-    default:
-      return Activity;
-  }
-}
+type CommunicationChannel = {
+  id: string;
+  name: string;
+  icon: string;
+  connected: boolean;
+  color: string;
+};
 
-function getActivityColor(type: RecentActivity['type']) {
-  switch (type) {
-    case 'user_joined':
-      return 'text-green-400 bg-green-400/10';
-    case 'minion_created':
-      return 'text-blue-400 bg-blue-400/10';
-    case 'document_uploaded':
-      return 'text-purple-400 bg-purple-400/10';
-    case 'task_completed':
-      return 'text-cyan-400 bg-cyan-400/10';
-    default:
-      return 'text-slate-400 bg-slate-400/10';
-  }
-}
+const communicationChannels: CommunicationChannel[] = [
+  { id: "whatsapp", name: "WhatsApp", icon: "💬", connected: false, color: "text-green-500" },
+  { id: "zalo", name: "Zalo", icon: "💙", connected: false, color: "text-blue-500" },
+  { id: "slack", name: "Slack", icon: "💼", connected: false, color: "text-purple-500" },
+  { id: "email", name: "Email", icon: "📧", connected: false, color: "text-red-500" },
+];
+
+type TodoItem = {
+  id: string;
+  title: string;
+  completed: boolean;
+  priority: 'high' | 'medium' | 'low';
+};
+
+const todoItems: TodoItem[] = [
+  { id: "1", title: "Review marketing proposals", completed: false, priority: "high" },
+  { id: "2", title: "Schedule team meeting", completed: false, priority: "medium" },
+  { id: "3", title: "Update project documentation", completed: true, priority: "low" },
+];
+
+type CalendarEvent = {
+  id: string;
+  title: string;
+  time: string;
+  date: string;
+};
+
+const upcomingEvents: CalendarEvent[] = [
+  { id: "1", title: "Team Standup", time: "09:00", date: "Today" },
+  { id: "2", title: "Client Presentation", time: "14:30", date: "Today" },
+  { id: "3", title: "Project Review", time: "10:00", date: "Tomorrow" },
+];
 
 export default function OfficeDashboard() {
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
+  const [selectedWorkspace, setSelectedWorkspace] = useState(workspaces[0]);
+  const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false);
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between retro-window-border dark:bg-slate-900/30 bg-stone-100/60 backdrop-blur-sm p-6 rounded-sm">
-        <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
-        <div className="relative z-10">
-          <h1 className="text-3xl font-press-start dark:text-white text-stone-800 mb-4 glow-text">
-            Konductor Office
-          </h1>
-          <p className="dark:text-cyan-400 text-amber-700 font-jersey text-lg">
-            Welcome back! Here's what's happening in your AI workspace.
-          </p>
-        </div>
-        <div className="relative z-10 mt-4 sm:mt-0 text-right">
-          <p className="dark:text-slate-400 text-stone-600 text-sm font-jersey">
-            {currentTime.toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </p>
-          <p className="dark:text-cyan-400 text-amber-600 font-mono text-lg font-bold">
-            {currentTime.toLocaleTimeString('en-US', {
-              hour12: false
-            })}
-          </p>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={stat.title}
-              className="retro-window-border dark:bg-slate-900/60 bg-stone-50/80 backdrop-blur-sm p-6 rounded-sm hover:scale-105 transition-all duration-300 relative"
-            >
-              <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
-              <div className="relative z-10 flex items-center justify-between">
-                <div>
-                  <p className="dark:text-slate-400 text-stone-600 text-sm font-jersey">{stat.title}</p>
-                  <p className="text-2xl font-press-start dark:text-cyan-400 text-amber-700 mt-1 glow-text">{stat.value}</p>
-                  <div className="flex items-center mt-2">
-                    <span className={`text-sm font-jersey ${
-                      stat.changeType === 'positive' ? 'dark:text-green-400 text-green-600' :
-                      stat.changeType === 'negative' ? 'dark:text-red-400 text-red-600' :
-                      'dark:text-slate-400 text-stone-500'
-                    }`}>
-                      {stat.change}
-                    </span>
-                    <span className="dark:text-slate-400 text-stone-500 text-sm font-jersey ml-1">from last month</span>
+    <div className="p-6 space-y-6 min-h-screen">
+      {/* Top Bar with Workspace Selection */}
+      <div className="flex justify-end mb-8">
+        <div className="relative">
+          <button
+            onClick={() => setShowWorkspaceDropdown(!showWorkspaceDropdown)}
+            className="flex items-center space-x-2 px-4 py-2 dark:bg-slate-800/60 bg-stone-200/80 border-2 border-solid dark:border-slate-600 border-stone-400 font-jersey dark:text-white text-stone-800 hover:dark:bg-slate-700/60 hover:bg-stone-300/80 transition-colors pixelated-stairs"
+          >
+            <span>{selectedWorkspace.name}</span>
+            <ChevronDown className="h-4 w-4" />
+          </button>
+          
+          {showWorkspaceDropdown && (
+            <div className="absolute right-0 mt-2 w-64 dark:bg-slate-800 bg-stone-100 border-2 border-solid dark:border-slate-600 border-stone-400 shadow-lg z-50 pixelated-stairs">
+              {workspaces.map((workspace) => (
+                <button
+                  key={workspace.id}
+                  onClick={() => {
+                    setSelectedWorkspace(workspace);
+                    setShowWorkspaceDropdown(false);
+                  }}
+                  className={`w-full text-left px-4 py-3 font-jersey hover:dark:bg-slate-700 hover:bg-stone-200 transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                    selectedWorkspace.id === workspace.id ? 'dark:bg-slate-700 bg-stone-200' : ''
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="dark:text-white text-stone-800">{workspace.name}</span>
+                    {workspace.isDefault && (
+                      <span className="text-xs dark:text-cyan-400 text-amber-600 font-press-start">DEFAULT</span>
+                    )}
                   </div>
-                </div>
-                <div className="retro-window-border dark:bg-cyan-400/20 bg-amber-200/60 p-3 rounded-sm">
-                  <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
-                  <Icon className="relative z-10 h-6 w-6 dark:text-cyan-400 text-amber-700 pixelated" />
-                </div>
-              </div>
+                </button>
+              ))}
             </div>
-          );
-        })}
+          )}
+        </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Activity */}
+      {/* Main Dashboard Flow */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Communication Channels Column */}
         <div className="lg:col-span-2">
-          <div className="retro-window-border dark:bg-slate-900/60 bg-stone-50/80 backdrop-blur-sm p-6 rounded-sm relative">
-            <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
-            <div className="relative z-10 flex items-center justify-between mb-6">
-              <h2 className="text-xl font-press-start dark:text-white text-stone-800 glow-text">Recent Activity</h2>
-              <button className="retro-button-small dark:text-cyan-400 text-amber-700 hover:dark:text-cyan-300 hover:text-amber-600 text-sm font-medium transition-colors px-3 py-1">
-                View All
-              </button>
+          <div className="pixel-corners--wrapper">
+            <div className="pixel-corners dark:bg-slate-800/40 bg-stone-100/60 p-6">
+            <h3 className="font-press-start text-sm dark:text-white text-stone-800 mb-6 text-center">Channels</h3>
+            <div className="space-y-4">
+              {communicationChannels.map((channel) => (
+                <div key={channel.id} className="flex flex-col items-center">
+                  <button
+                    className={`w-12 h-12 border-2 border-solid flex items-center justify-center text-2xl transition-all pixelated-stairs ${
+                      channel.connected 
+                        ? 'dark:bg-slate-700 bg-stone-200 dark:border-slate-500 border-stone-500 hover:scale-105' 
+                        : 'dark:bg-slate-900/50 bg-stone-300/50 dark:border-slate-700 border-stone-500 opacity-50 cursor-not-allowed'
+                    }`}
+                    disabled={!channel.connected}
+                  >
+                    {channel.icon}
+                  </button>
+                  <span className="text-xs font-jersey dark:text-slate-400 text-stone-600 mt-1 text-center">
+                    {channel.name}
+                  </span>
+                  {/* Arrow pointing right */}
+                  <ArrowRight className="h-4 w-4 dark:text-slate-500 text-stone-500 mt-2" />
+                </div>
+              ))}
             </div>
-            
-            <div className="relative z-10 space-y-4">
-              {recentActivities.map((activity) => {
-                const Icon = getActivityIcon(activity.type);
-                const colorClass = getActivityColor(activity.type);
-                
-                return (
-                  <div key={activity.id} className="flex items-start space-x-3 retro-window-border dark:bg-slate-800/30 bg-stone-100/50 p-3 rounded-sm relative">
-                    <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
-                    <div className={`relative z-10 p-2 rounded-sm retro-window-border ${colorClass}`}>
-                      <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
-                      <Icon className="relative z-10 h-4 w-4 pixelated" />
-                    </div>
-                    <div className="relative z-10 flex-1 min-w-0">
-                      <p className="dark:text-white text-stone-800 text-sm font-jersey">{activity.message}</p>
-                      <div className="flex items-center mt-1 space-x-2">
-                        {activity.user && (
-                          <span className="dark:text-cyan-400 text-amber-600 text-xs font-medium font-press-start">
-                            @{activity.user}
-                          </span>
-                        )}
-                        <span className="dark:text-slate-400 text-stone-500 text-xs font-jersey">{activity.timestamp}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="space-y-6">
-          {/* Quick Stats */}
-          <div className="retro-window-border dark:bg-slate-900/60 bg-stone-50/80 backdrop-blur-sm p-6 rounded-sm relative">
-            <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
-            <h3 className="relative z-10 text-lg font-press-start dark:text-white text-stone-800 mb-4 glow-text">Quick Stats</h3>
-            <div className="relative z-10 space-y-4">
-              <div className="flex items-center justify-between retro-window-border dark:bg-slate-800/30 bg-stone-100/50 p-2 rounded-sm relative">
-                <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
-                <span className="relative z-10 dark:text-slate-300 text-stone-700 text-sm font-jersey">Active Sessions</span>
-                <span className="relative z-10 dark:text-cyan-400 text-amber-600 font-press-start text-sm glow-text">247</span>
+        {/* Konductor Logo Column */}
+        <div className="lg:col-span-2 flex flex-col items-center justify-center">
+          <div className="pixel-corners--wrapper">
+            <div className="pixel-corners dark:bg-slate-800/40 bg-stone-100/60 p-8">
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 mb-4">
+                <Image
+                  src="/logos/k_icon.png"
+                  alt="Konductor Logo"
+                  width={64}
+                  height={64}
+                  className="pixelated"
+                />
               </div>
-              <div className="flex items-center justify-between retro-window-border dark:bg-slate-800/30 bg-stone-100/50 p-2 rounded-sm relative">
-                <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
-                <span className="relative z-10 dark:text-slate-300 text-stone-700 text-sm font-jersey">Messages Today</span>
-                <span className="relative z-10 dark:text-green-400 text-green-600 font-press-start text-sm glow-text">1,892</span>
+              <span className="font-press-start text-xs dark:text-white text-stone-800 text-center">KONDUCTOR</span>
+            </div>
+            </div>
+          </div>
+          
+          {/* Arrows pointing to sections */}
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            <ArrowDown className="h-6 w-6 dark:text-slate-500 text-stone-500" />
+            <ArrowDown className="h-6 w-6 dark:text-slate-500 text-stone-500" />
+            <ArrowDown className="h-6 w-6 dark:text-slate-500 text-stone-500" />
+            <ArrowDown className="h-6 w-6 dark:text-slate-500 text-stone-500" />
+          </div>
+        </div>
+
+        {/* Right Side Sections */}
+        <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Timeline Section */}
+          <div className="pixel-corners--wrapper">
+            <div className="pixel-corners dark:bg-slate-800/40 bg-stone-100/60 p-6">
+            <div className="flex items-center mb-4">
+              <Clock className="h-5 w-5 dark:text-cyan-400 text-amber-600 mr-2" />
+              <h3 className="font-press-start text-sm dark:text-white text-stone-800">Timeline</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="text-sm font-jersey dark:text-slate-300 text-stone-700">
+                No recent activity
               </div>
-              <div className="flex items-center justify-between retro-window-border dark:bg-slate-800/30 bg-stone-100/50 p-2 rounded-sm relative">
-                <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
-                <span className="relative z-10 dark:text-slate-300 text-stone-700 text-sm font-jersey">Tasks Completed</span>
-                <span className="relative z-10 dark:text-purple-400 text-purple-600 font-press-start text-sm glow-text">156</span>
+              <div className="text-xs dark:text-slate-500 text-stone-500">
+                Connect channels to see timeline updates
               </div>
-              <div className="flex items-center justify-between retro-window-border dark:bg-slate-800/30 bg-stone-100/50 p-2 rounded-sm relative">
-                <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
-                <span className="relative z-10 dark:text-slate-300 text-stone-700 text-sm font-jersey">System Health</span>
-                <span className="relative z-10 dark:text-green-400 text-green-600 font-semibold flex items-center">
-                  <div className="w-2 h-2 dark:bg-green-400 bg-green-600 rounded-full mr-2 pixelated"></div>
-                  Excellent
-                </span>
-              </div>
+            </div>
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="retro-window-border dark:bg-slate-900/60 bg-stone-50/80 backdrop-blur-sm p-6 rounded-sm relative">
-            <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
-            <h3 className="relative z-10 text-lg font-press-start dark:text-white text-stone-800 mb-4 glow-text">Quick Actions</h3>
-            <div className="relative z-10 space-y-3">
-              <button className="w-full retro-button hover:scale-105 transition-transform duration-200 py-3 px-4 text-xs">
-                Create New Minion
-              </button>
-              <button className="w-full retro-window-border dark:bg-gradient-to-r dark:from-purple-500 dark:to-pink-500 bg-gradient-to-r from-amber-400 to-orange-500 hover:dark:from-purple-600 hover:dark:to-pink-600 hover:from-amber-500 hover:to-orange-600 dark:text-white text-stone-900 font-press-start text-xs py-3 px-4 rounded-sm transition-all duration-200 hover:scale-105 relative">
-                <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
-                <span className="relative z-10">Upload Document</span>
-              </button>
-              <button className="w-full retro-window-border dark:bg-gradient-to-r dark:from-green-500 dark:to-emerald-500 bg-gradient-to-r from-green-400 to-emerald-400 hover:dark:from-green-600 hover:dark:to-emerald-600 hover:from-green-500 hover:to-emerald-500 dark:text-white text-stone-900 font-press-start text-xs py-3 px-4 rounded-sm transition-all duration-200 hover:scale-105 relative">
-                <div className="absolute inset-0 retro-window-inset rounded-sm"></div>
-                <span className="relative z-10">View Analytics</span>
-              </button>
+          {/* TODO List Section */}
+          <div className="pixel-corners--wrapper">
+            <div className="pixel-corners dark:bg-slate-800/40 bg-stone-100/60 p-6">
+            <div className="flex items-center mb-4">
+              <CheckSquare className="h-5 w-5 dark:text-cyan-400 text-amber-600 mr-2" />
+              <h3 className="font-press-start text-sm dark:text-white text-stone-800">TODO List</h3>
+            </div>
+            <div className="space-y-3">
+              {todoItems.map((item) => (
+                <div key={item.id} className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={item.completed}
+                    className="w-4 h-4 border-2 dark:border-slate-500 border-stone-500 pixelated"
+                    readOnly
+                  />
+                  <span className={`text-sm font-jersey ${
+                    item.completed 
+                      ? 'dark:text-slate-500 text-stone-500 line-through' 
+                      : 'dark:text-slate-300 text-stone-700'
+                  }`}>
+                    {item.title}
+                  </span>
+                  <span className={`text-xs px-2 py-1 font-press-start pixelated-stairs ${
+                    item.priority === 'high' ? 'dark:bg-red-900/30 bg-red-200/60 dark:text-red-400 text-red-700' :
+                    item.priority === 'medium' ? 'dark:bg-yellow-900/30 bg-yellow-200/60 dark:text-yellow-400 text-yellow-700' :
+                    'dark:bg-green-900/30 bg-green-200/60 dark:text-green-400 text-green-700'
+                  }`}>
+                    {item.priority.toUpperCase()}
+                  </span>
+                </div>
+              ))}
+            </div>
+            </div>
+          </div>
+
+          {/* Conversations Summary Section */}
+          <div className="pixel-corners--wrapper">
+            <div className="pixel-corners dark:bg-slate-800/40 bg-stone-100/60 p-6">
+            <div className="flex items-center mb-4">
+              <MessageCircle className="h-5 w-5 dark:text-cyan-400 text-amber-600 mr-2" />
+              <h3 className="font-press-start text-sm dark:text-white text-stone-800">Conversations</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="text-sm font-jersey dark:text-slate-300 text-stone-700">
+                No conversations yet
+              </div>
+              <div className="text-xs dark:text-slate-500 text-stone-500">
+                Connect communication channels to start
+              </div>
+            </div>
+            </div>
+          </div>
+
+          {/* Calendar Section */}
+          <div className="pixel-corners--wrapper">
+            <div className="pixel-corners dark:bg-slate-800/40 bg-stone-100/60 p-6">
+            <div className="flex items-center mb-4">
+              <Calendar className="h-5 w-5 dark:text-cyan-400 text-amber-600 mr-2" />
+              <h3 className="font-press-start text-sm dark:text-white text-stone-800">Calendar</h3>
+            </div>
+            <div className="space-y-3">
+              {upcomingEvents.map((event) => (
+                <div key={event.id} className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-jersey dark:text-slate-300 text-stone-700">
+                      {event.title}
+                    </div>
+                    <div className="text-xs dark:text-slate-500 text-stone-500">
+                      {event.date} at {event.time}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
             </div>
           </div>
         </div>
