@@ -1,61 +1,116 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckSquare, Plus, X } from "lucide-react";
 import { PixelWindow } from "@/components/ui/PixelWindow";
-
-type TodoItem = {
-  id: string;
-  title: string;
-  completed: boolean;
-  priority: 'high' | 'medium' | 'low';
-  dueDate?: string;
-};
-
-const initialTodos: TodoItem[] = [
-  { id: "1", title: "Review marketing proposals", completed: false, priority: "high", dueDate: "Today" },
-  { id: "2", title: "Schedule team meeting", completed: false, priority: "medium", dueDate: "Tomorrow" },
-  { id: "3", title: "Update project documentation", completed: true, priority: "low" },
-  { id: "4", title: "Prepare client presentation", completed: false, priority: "high", dueDate: "Friday" },
-  { id: "5", title: "Code review for new feature", completed: false, priority: "medium" },
-];
+import { getCurrentUser, getUserDefaultWorkspace, getWorkspaceTasks, createTask, updateChannelStatus } from "@/lib/pocketbase-utils";
+import { Task, User, Workspace } from "@/lib/types";
+import pb from "@/lib/pocketbase";
 
 interface TasksListProps {
-  tasks?: TodoItem[];
+  workspaceId?: string;
 }
 
-export function TasksList({ tasks = initialTodos }: TasksListProps) {
-  const [todos, setTodos] = useState(tasks);
+export function TasksList({ workspaceId }: TasksListProps) {
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState<'high' | 'medium' | 'low'>('medium');
+  const [user, setUser] = useState<User | null>(null);
+  const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const completedTodos = todos.filter(item => item.completed).length;
-  const totalTodos = todos.length;
+  useEffect(() => {
+    loadTasks();
+  }, [workspaceId]);
 
-  const toggleTodo = (id: string) => {
-    setTodos(prev => prev.map(todo => 
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ));
-  };
-
-  const addNewTask = () => {
-    if (newTaskTitle.trim()) {
-      const newTask: TodoItem = {
-        id: Date.now().toString(),
-        title: newTaskTitle.trim(),
-        completed: false,
-        priority: newTaskPriority
-      };
-      setTodos(prev => [newTask, ...prev]);
-      setNewTaskTitle('');
-      setNewTaskPriority('medium');
-      setShowAddForm(false);
+  const loadTasks = async () => {
+    try {
+      setLoading(true);
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        console.error('No authenticated user found');
+        return;
+      }
+      
+      setUser(currentUser);
+      
+      let targetWorkspaceId = workspaceId;
+      if (!targetWorkspaceId) {
+        const defaultWorkspace = await getUserDefaultWorkspace(currentUser.id);
+        if (!defaultWorkspace) {
+          console.error('No default workspace found');
+          return;
+        }
+        setWorkspace(defaultWorkspace);
+        targetWorkspaceId = defaultWorkspace.id;
+      }
+      
+      const workspaceTasks = await getWorkspaceTasks(targetWorkspaceId);
+      setTasks(workspaceTasks);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const deleteTodo = (id: string) => {
-    setTodos(prev => prev.filter(todo => todo.id !== id));
+  const completedTasks = tasks.filter(task => task.status === 'completed').length;
+  const totalTasks = tasks.length;
+
+  const toggleTask = async (id: string) => {
+    try {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      
+      const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+      const updateData: any = { status: newStatus };
+      
+      if (newStatus === 'completed') {
+        updateData.completedAt = new Date().toISOString();
+      } else {
+        updateData.completedAt = null;
+      }
+      
+      await pb.collection('tasks').update(id, updateData);
+      
+      // Update local state
+      setTasks(prev => prev.map(t => 
+        t.id === id ? { ...t, status: newStatus, completedAt: updateData.completedAt } : t
+      ));
+    } catch (error) {
+      console.error('Error toggling task:', error);
+    }
+  };
+
+  const addNewTask = async () => {
+    if (!newTaskTitle.trim() || !workspace) return;
+    
+    try {
+      const newTask = await createTask({
+        workspace: workspace.id,
+        title: newTaskTitle.trim(),
+        status: 'pending',
+        priority: newTaskPriority,
+        tags: []
+      });
+      
+      setTasks(prev => [newTask, ...prev]);
+      setNewTaskTitle('');
+      setNewTaskPriority('medium');
+      setShowAddForm(false);
+    } catch (error) {
+      console.error('Error creating task:', error);
+    }
+  };
+
+  const deleteTask = async (id: string) => {
+    try {
+      await pb.collection('tasks').delete(id);
+      setTasks(prev => prev.filter(task => task.id !== id));
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
   };
 
   const getPriorityColor = (priority: 'high' | 'medium' | 'low') => {
@@ -69,8 +124,45 @@ export function TasksList({ tasks = initialTodos }: TasksListProps) {
     }
   };
 
+  const formatDueDate = (dueDate?: string) => {
+    if (!dueDate) return null;
+    
+    const date = new Date(dueDate);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return 'Tomorrow';
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
+  if (loading) {
+    return (
+      <PixelWindow title="Tasks" stats="Loading..." variant="secondary">
+        <div className="space-y-3">
+          <div className="animate-pulse">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center space-x-3 p-2 retro-border-thick dark:bg-slate-800/50 bg-stone-100/50">
+                <div className="w-4 h-4 bg-slate-300 dark:bg-slate-600 rounded"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-slate-300 dark:bg-slate-600 rounded mb-2"></div>
+                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </PixelWindow>
+    );
+  }
+
   return (
-    <PixelWindow title="Tasks" stats={`${completedTodos}/${totalTodos} completed`} variant="secondary">
+    <PixelWindow title="Tasks" stats={`${completedTasks}/${totalTasks} completed`} variant="secondary">
       <div className="space-y-3">
         {/* Add Task Button */}
         {!showAddForm && (
@@ -130,7 +222,7 @@ export function TasksList({ tasks = initialTodos }: TasksListProps) {
 
         {/* Tasks List */}
         <div className="space-y-3 max-h-64 overflow-y-auto">
-          {todos.length === 0 ? (
+          {tasks.length === 0 ? (
             <div className="text-center py-8">
               <CheckSquare className="w-12 h-12 mx-auto dark:text-slate-500 text-stone-500 mb-4" />
               <div className="text-sm font-jersey dark:text-slate-300 text-stone-700 mb-2">
@@ -141,18 +233,18 @@ export function TasksList({ tasks = initialTodos }: TasksListProps) {
               </div>
             </div>
           ) : (
-            todos.map((item) => (
-              <div key={item.id} className="group flex items-start space-x-3 p-2 retro-border-thick dark:bg-slate-800/50 bg-stone-100/50 hover:dark:bg-slate-700/50 hover:bg-stone-200/50 transition-colors">
+            tasks.map((task) => (
+              <div key={task.id} className="group flex items-start space-x-3 p-2 retro-border-thick dark:bg-slate-800/50 bg-stone-100/50 hover:dark:bg-slate-700/50 hover:bg-stone-200/50 transition-colors">
                 <button
-                  onClick={() => toggleTodo(item.id)}
+                  onClick={() => toggleTask(task.id)}
                   className="mt-1"
                 >
                   <div className={`w-4 h-4 retro-border-thick flex items-center justify-center ${
-                    item.completed 
+                    task.status === 'completed' 
                       ? 'dark:bg-green-600 bg-green-500 dark:border-green-400 border-green-600' 
                       : 'dark:bg-slate-700 bg-stone-200 dark:border-slate-500 border-stone-400'
                   }`}>
-                    {item.completed && (
+                    {task.status === 'completed' && (
                       <CheckSquare className="w-3 h-3 text-white" />
                     )}
                   </div>
@@ -161,15 +253,15 @@ export function TasksList({ tasks = initialTodos }: TasksListProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <span className={`text-sm font-jersey ${
-                      item.completed 
+                      task.status === 'completed' 
                         ? 'dark:text-slate-500 text-stone-500 line-through' 
                         : 'dark:text-slate-300 text-stone-700'
                     }`}>
-                      {item.title}
+                      {task.title}
                     </span>
                     
                     <button
-                      onClick={() => deleteTodo(item.id)}
+                      onClick={() => deleteTask(task.id)}
                       className="opacity-0 group-hover:opacity-100 transition-opacity retro-button-3d retro-border-thick p-1"
                     >
                       <X className="w-3 h-3" />
@@ -178,14 +270,14 @@ export function TasksList({ tasks = initialTodos }: TasksListProps) {
                   
                   <div className="flex items-center space-x-2">
                     <span className={`text-xs px-2 py-1 font-press-start retro-border-thick ${
-                      getPriorityColor(item.priority)
+                      getPriorityColor(task.priority)
                     }`}>
-                      {item.priority.toUpperCase()}
+                      {task.priority.toUpperCase()}
                     </span>
                     
-                    {item.dueDate && (
+                    {task.dueDate && (
                       <span className="text-xs font-jersey dark:text-slate-500 text-stone-500">
-                        Due: {item.dueDate}
+                        Due: {formatDueDate(task.dueDate)}
                       </span>
                     )}
                   </div>
@@ -195,11 +287,11 @@ export function TasksList({ tasks = initialTodos }: TasksListProps) {
           )}
         </div>
         
-        {todos.length > 0 && (
+        {tasks.length > 0 && (
           <div className="pt-3 border-t dark:border-slate-600 border-stone-400">
             <div className="flex justify-between text-xs font-jersey dark:text-slate-400 text-stone-600">
-              <span>Completed: {completedTodos}</span>
-              <span>Remaining: {totalTodos - completedTodos}</span>
+              <span>Completed: {completedTasks}</span>
+              <span>Remaining: {totalTasks - completedTasks}</span>
             </div>
           </div>
         )}
