@@ -20,10 +20,10 @@ interface OnboardingChannelsProps {
 }
 
 const initialChannels: CommunicationChannel[] = [
-  { id: "whatsapp", name: "WhatsApp", icon: "💬", connected: false, color: "text-green-500" },
-  { id: "zalo", name: "Zalo", icon: "💙", connected: false, color: "text-blue-500" },
-  { id: "slack", name: "Slack", icon: "💼", connected: false, color: "text-purple-500" },
-  { id: "email", name: "Email", icon: "📧", connected: false, color: "text-red-500" },
+  { id: "whatsapp", name: "WhatsApp", icon: "/misc/wa-hires.png", connected: false, color: "text-green-500" },
+  { id: "zalo", name: "Zalo", icon: "/misc/zalo.png", connected: false, color: "text-blue-500" },
+  { id: "slack", name: "Slack", icon: "/misc/slack.png", connected: false, color: "text-purple-500" },
+  { id: "email", name: "Email", icon: "/misc/email.png", connected: false, color: "text-red-500" },
 ];
 
 export function OnboardingChannels({ username = 'johndoe' }: OnboardingChannelsProps) {
@@ -91,7 +91,13 @@ export function OnboardingChannels({ username = 'johndoe' }: OnboardingChannelsP
           return (
             <div className="space-y-6">
               <div className="text-center">
-                <div className="text-6xl mb-4">{selectedChannel.icon}</div>
+                <div className="mb-4">
+                  <img 
+                    src={selectedChannel.icon} 
+                    alt={selectedChannel.name} 
+                    className="w-16 h-16 mx-auto object-contain"
+                  />
+                </div>
                 <h3 className="font-press-start text-lg dark:text-white text-stone-900 mb-2">
                   Connect WhatsApp
                 </h3>
@@ -450,7 +456,11 @@ export function OnboardingChannels({ username = 'johndoe' }: OnboardingChannelsP
                     : 'hover:scale-105'
                 }`}
               >
-                {channel.icon}
+                <img 
+                  src={channel.icon} 
+                  alt={channel.name} 
+                  className="w-8 h-8 object-contain"
+                />
               </button>
               <span className="text-sm font-jersey dark:text-slate-400 text-stone-600 mt-2 text-center">
                 {channel.name}
