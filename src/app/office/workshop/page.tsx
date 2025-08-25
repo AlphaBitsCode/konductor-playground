@@ -304,7 +304,7 @@ export default function WorkshopPage() {
   );
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="page-content-with-sticky-header h-full flex flex-col">
       <PageHeader 
          title="Workshop"
          subtitle="Manage AI Minions"

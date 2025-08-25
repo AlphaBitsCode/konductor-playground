@@ -55,7 +55,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div>
+    <div className="page-content-with-sticky-header">
       <PageHeader 
          title="Settings"
          subtitle="Workspace Configuration"

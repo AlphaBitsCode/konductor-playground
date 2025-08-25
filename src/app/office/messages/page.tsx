@@ -469,7 +469,7 @@ export default function MessagesPage() {
   );
 
   return (
-    <div>
+    <div className="page-content-with-sticky-header">
       <PageHeader 
         title="Messages"
         subtitle="Communication Hub"

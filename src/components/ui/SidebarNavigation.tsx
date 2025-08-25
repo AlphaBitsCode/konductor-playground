@@ -83,18 +83,18 @@ export default function SidebarNavigation() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center space-x-3 p-3 rounded transition-all duration-200 group ${
+              className={`sidebar-nav-item-large flex items-center space-x-3 rounded transition-all duration-200 group ${
                 isActive
                   ? 'dark:bg-cyan-500/20 bg-amber-500/20 dark:text-cyan-400 text-amber-700 retro-border-thick dark:border-cyan-500/30 border-amber-500/30'
                   : 'dark:text-slate-300 text-stone-700 hover:dark:bg-slate-700/50 hover:bg-stone-200/50 dark:hover:text-white hover:text-stone-900'
               }`}
               title={isCollapsed ? item.label : undefined}
             >
-              <Icon className={`h-5 w-5 flex-shrink-0 ${
+              <Icon className={`sidebar-nav-icon-large ${
                 isActive ? 'dark:text-cyan-400 text-amber-700' : ''
               }`} />
               {!isCollapsed && (
-                <span className="font-jersey text-sm font-medium truncate">
+                <span className="font-jersey font-medium truncate">
                   {item.label}
                 </span>
               )}
@@ -104,27 +104,27 @@ export default function SidebarNavigation() {
       </nav>
 
       {/* User Profile Section - Fixed at bottom */}
-      <div className={`fixed bottom-0 left-0 p-4 border-t-2 dark:border-slate-600 border-stone-300 dark:bg-slate-900/95 bg-stone-100/95 backdrop-blur-sm transition-all duration-300 ${
+      <div className={`sidebar-user-section fixed bottom-0 left-0 border-t-2 dark:border-slate-600 border-stone-300 dark:bg-slate-900/95 bg-stone-100/95 backdrop-blur-sm transition-all duration-300 ${
         isCollapsed ? 'w-16' : 'w-64'
       }`}>
         <div className={`flex items-center space-x-3 p-3 dark:bg-slate-800/50 bg-stone-200/50 rounded ${
           isCollapsed ? 'justify-center' : ''
         }`}>
-          <div className="w-8 h-8 dark:bg-cyan-500 bg-amber-500 border-2 dark:border-slate-500 border-stone-400 flex items-center justify-center pixelated flex-shrink-0">
-            <span className="dark:text-white text-stone-900 font-bold text-xs">K</span>
+          <div className="w-10 h-10 dark:bg-cyan-500 bg-amber-500 border-2 dark:border-slate-500 border-stone-400 flex items-center justify-center pixelated flex-shrink-0">
+            <span className="dark:text-white text-stone-900 font-bold text-sm">K</span>
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="dark:text-white text-stone-800 font-medium text-sm font-jersey truncate">@admin</p>
-              <p className="dark:text-slate-400 text-stone-600 text-xs font-jersey">Online</p>
+              <p className="sidebar-user-name dark:text-white text-stone-800 font-jersey truncate">@admin</p>
+              <p className="sidebar-user-status dark:text-slate-400 text-stone-600 font-jersey">Online</p>
             </div>
           )}
         </div>
         
         {!isCollapsed && (
-          <button className="w-full mt-2 flex items-center justify-center space-x-2 p-2 dark:text-slate-400 text-stone-600 hover:dark:text-white hover:text-stone-800 transition-colors">
-            <LogOut className="h-4 w-4" />
-            <span className="font-jersey text-sm">Logout</span>
+          <button className="sidebar-logout-btn w-full mt-2 flex items-center justify-center space-x-2 dark:text-slate-400 text-stone-600 hover:dark:text-white hover:text-stone-800 transition-colors">
+            <LogOut className="h-5 w-5" />
+            <span className="font-jersey">Logout</span>
           </button>
         )}
       </div>

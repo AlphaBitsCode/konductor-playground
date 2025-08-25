@@ -465,7 +465,7 @@ export default function OfficeDashboard() {
   };
 
   return (
-    <div>
+    <div className="page-content-with-sticky-header">
       <PageHeader 
         title="Dashboard"
         subtitle="Workspace Overview"

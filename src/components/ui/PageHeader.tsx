@@ -28,7 +28,7 @@ export function PageHeader({
   ];
 
   return (
-    <div className="sticky top-0 z-30 border-b-2 dark:border-slate-600 border-stone-300 dark:bg-slate-900/95 bg-stone-100/95 backdrop-blur-md shadow-lg">
+    <div className="sticky top-0 z-50 border-b-2 dark:border-slate-600 border-stone-300 dark:bg-slate-900/95 bg-stone-100/95 backdrop-blur-md shadow-lg">
       <div className="p-4">
         {/* Breadcrumb Navigation */}
         {defaultBreadcrumbs.length > 0 && (
