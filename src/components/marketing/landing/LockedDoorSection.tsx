@@ -5,6 +5,7 @@ import { AnimatedEmailIcon } from '@/components/ui/AnimatedEmailIcon';
 
 export const LockedDoorSection = () => {
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -12,16 +13,47 @@ export const LockedDoorSection = () => {
   const [showEmailAnimation, setShowEmailAnimation] = useState(false);
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
+
+  const validateUsername = (username: string): string | null => {
+    if (username.length < 5 || username.length > 25) {
+      return 'Username must be between 5 and 25 characters';
+    }
+    
+    const validPattern = /^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?$/;
+    if (!validPattern.test(username)) {
+      return 'Username can only contain letters, numbers, and one dot (no spaces or dashes)';
+    }
+
+    const dotCount = (username.match(/\./g) || []).length;
+    if (dotCount > 1) {
+      return 'Username can contain at most one dot';
+    }
+
+    return null;
+  };
+
+  const handleUsernameChange = (value: string) => {
+    setUsername(value);
+    const error = validateUsername(value);
+    setUsernameError(error);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || isSubmitting) {
+    
+    const usernameValidationError = validateUsername(username);
+    if (!email || !username || usernameValidationError || isSubmitting) {
+      if (usernameValidationError) {
+        setUsernameError(usernameValidationError);
+      }
       return;
     }
 
     setIsSubmitting(true);
     setErrorMsg(null);
+    setUsernameError(null);
 
     try {
       const response = await fetch('/api/early-access', {
@@ -29,7 +61,7 @@ export const LockedDoorSection = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, username }),
       });
 
       const data = await response.json();
@@ -42,6 +74,7 @@ export const LockedDoorSection = () => {
         setTimeout(() => {
           setIsSubmitted(true);
           setEmail('');
+          setUsername('');
         }, 1000);
       } else {
         console.error('Signup failed:', data.error);
@@ -197,6 +230,29 @@ export const LockedDoorSection = () => {
                   <div className="space-y-4">
                     <div className="glassmorphism rounded-lg p-6 space-y-4">
                       <div>
+                        <label htmlFor="early-access-username" className="block pixel-font text-sm text-cyan-400 mb-2">
+                          Username
+                        </label>
+                        <input
+                          id="early-access-username"
+                          type="text"
+                          value={username}
+                          onChange={e => handleUsernameChange(e.target.value)}
+                          placeholder="player.name"
+                          className={`w-full px-4 py-3 bg-slate-800 border-2 rounded-lg text-white placeholder-gray-400 focus:outline-none transition-colors duration-200 ${
+                            usernameError ? 'border-red-400 focus:border-red-400' : 'border-gray-600 focus:border-cyan-400'
+                          }`}
+                          required
+                          disabled={isSubmitting}
+                          minLength={5}
+                          maxLength={25}
+                        />
+                        {usernameError && (
+                          <p className="text-red-400 text-xs mt-1">{usernameError}</p>
+                        )}
+                      </div>
+
+                      <div>
                         {/** Associate label with input for a11y */}
                         <label htmlFor="early-access-email" className="block pixel-font text-sm text-cyan-400 mb-2">
                           Email Address
@@ -226,7 +282,7 @@ export const LockedDoorSection = () => {
 
                     <button
                       type="submit"
-                      disabled={!email || isSubmitting}
+                      disabled={!email || !username || !!usernameError || isSubmitting}
                       className="w-full pixel-button glassmorphism px-6 py-4 rounded-lg border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                     >
                       {isSubmitting

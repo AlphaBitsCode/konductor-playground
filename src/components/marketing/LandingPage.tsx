@@ -1,26 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import { HeroSection } from "./landing/HeroSection";
 import { DepartmentSection } from "./landing/DepartmentSection";
-import { LockedDoorSection } from "./landing/LockedDoorSection";
 import { WalkingCharacter } from "./landing/WalkingCharacter";
-import { SlidingDoor } from "./landing/SlidingDoor";
 import { PixelNavigation } from "./landing/PixelNavigation";
-import { Copyright } from "./landing/Copyright";
+
+// Lazy load heavy components
+const LockedDoorSection = lazy(() => import("./landing/LockedDoorSection").then(m => ({ default: m.LockedDoorSection })));
+const SlidingDoor = lazy(() => import("./landing/SlidingDoor").then(m => ({ default: m.SlidingDoor })));
+const Copyright = lazy(() => import("./landing/Copyright").then(m => ({ default: m.Copyright })));
 
 export const LandingPage = () => {
   const [scrollY, setScrollY] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrollY(window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
     setIsLoaded(true);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const departments = [
+  const departments = useMemo(() => [
     {
       id: "hr",
       name: "Human Resources",
@@ -61,7 +72,7 @@ export const LandingPage = () => {
       color: "from-indigo-500 to-blue-500",
       characterPosition: "left",
     },
-  ];
+  ], []);
 
   if (!isLoaded) {
     return (
@@ -247,7 +258,9 @@ export const LandingPage = () => {
       />
 
       {/* Sliding Door - Appears at bottom when character approaches */}
-      <SlidingDoor scrollY={scrollY} />
+      <Suspense fallback={null}>
+        <SlidingDoor scrollY={scrollY} />
+      </Suspense>
 
       {/* Hero Section */}
       <HeroSection />
@@ -263,10 +276,14 @@ export const LandingPage = () => {
       ))}
 
       {/* Locked Door Section */}
-      <LockedDoorSection />
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-red-900 to-slate-900"><div className="pixel-loader"><div className="pixel-block"></div><div className="pixel-block"></div><div className="pixel-block"></div><div className="pixel-block"></div></div></div>}>
+        <LockedDoorSection />
+      </Suspense>
 
       {/* Copyright */}
-      <Copyright />
+      <Suspense fallback={null}>
+        <Copyright />
+      </Suspense>
 
       {/* Background Elements - Optimized for better performance */}
       <div className="fixed inset-0 simple-bg-animation pointer-events-none" />

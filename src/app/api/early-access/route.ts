@@ -4,7 +4,24 @@ import PocketBase, { ClientResponseError, RecordModel } from 'pocketbase';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    const { email, username } = await request.json();
+
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    }
+
+    if (!username) {
+      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
+    }
+
+    // Validate username format
+    const usernameRegex = /^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?$/;
+    if (username.length < 5 || username.length > 25 || !usernameRegex.test(username)) {
+      return NextResponse.json({
+        error: 'Username must be 5-25 characters, alphanumeric with optional single dot'
+      }, { status: 400 });
+    }
+
 
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       return NextResponse.json(
@@ -28,6 +45,7 @@ export async function POST(request: NextRequest) {
     interface UserRecord extends RecordModel {
       email: string;
       status: string;
+      username?: string;
       meta?: UserMeta;
     }
     let existingRecord: UserRecord | null = null;
@@ -36,6 +54,7 @@ export async function POST(request: NextRequest) {
       // Try to create a new user marked as waitlist
       const created = await pb.collection('users').create({
         email,
+        username,
         password,
         passwordConfirm: password,
         status: 'waitlist',
@@ -49,7 +68,7 @@ export async function POST(request: NextRequest) {
           const existing = await pb
             .collection('users')
             .getFirstListItem<UserRecord>(`email = "${email}"`);
-          await pb.collection('users').update(existing.id, { status: 'waitlist' });
+          await pb.collection('users').update(existing.id, { status: 'waitlist', username });
           existingRecord = existing;
           createdUserId = existing.id;
         } catch (findOrUpdateErr) {
