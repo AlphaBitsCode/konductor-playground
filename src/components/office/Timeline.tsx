@@ -5,6 +5,7 @@ import { Clock, MessageCircle, Mail, Calendar, CheckSquare } from "lucide-react"
 import { PixelWindow } from "@/components/ui/PixelWindow";
 import { getCurrentUser, getUserDefaultWorkspace, getWorkspaceTasks, getWorkspaceCalendarEvents } from "@/lib/pocketbase-utils";
 import { Task, CalendarEvent, Message, User, Workspace } from "@/lib/types";
+import { initializeSampleDataForUser } from "@/lib/sample-data";
 import pb from "@/lib/pocketbase";
 
 type TimelineEvent = {
@@ -43,15 +44,22 @@ export function Timeline({ workspaceId }: TimelineProps) {
       setUser(currentUser);
       
       let targetWorkspaceId = workspaceId;
-      if (!targetWorkspaceId) {
-        const defaultWorkspace = await getUserDefaultWorkspace(currentUser.id);
-        if (!defaultWorkspace) {
-          console.error('No default workspace found');
-          return;
-        }
-        setWorkspace(defaultWorkspace);
-        targetWorkspaceId = defaultWorkspace.id;
-      }
+       if (!targetWorkspaceId) {
+         let defaultWorkspace = await getUserDefaultWorkspace(currentUser.id);
+         if (!defaultWorkspace) {
+           console.log('No default workspace found, initializing sample data...');
+           try {
+             const sampleData = await initializeSampleDataForUser(currentUser.id);
+             defaultWorkspace = sampleData.workspace;
+             console.log('Sample data initialized successfully:', sampleData.summary);
+           } catch (error) {
+             console.error('Failed to initialize sample data:', error);
+             return;
+           }
+         }
+         setWorkspace(defaultWorkspace);
+         targetWorkspaceId = defaultWorkspace.id;
+       }
       
       // Load tasks, calendar events, and messages
       const [tasks, calendarEvents, messages] = await Promise.all([

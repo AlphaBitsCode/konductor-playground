@@ -12,6 +12,7 @@ import {
   getWhatsAppStatus
 } from "@/lib/pocketbase-utils";
 import { Channel, User, Workspace, WhatsAppQRResponse, WhatsAppStatusResponse } from "@/lib/types";
+import { initializeSampleDataForUser } from "@/lib/sample-data";
 
 type ConnectionStep = 'initial' | 'qr' | 'connecting' | 'connected';
 
@@ -67,10 +68,17 @@ export function OnboardingChannels({ username }: OnboardingChannelsProps) {
       
       setUser(currentUser);
       
-      const defaultWorkspace = await getUserDefaultWorkspace(currentUser.id);
+      let defaultWorkspace = await getUserDefaultWorkspace(currentUser.id);
       if (!defaultWorkspace) {
-        console.error('No default workspace found');
-        return;
+        console.log('No default workspace found, initializing sample data...');
+        try {
+          const sampleData = await initializeSampleDataForUser(currentUser.id);
+          defaultWorkspace = sampleData.workspace;
+          console.log('Sample data initialized successfully:', sampleData.summary);
+        } catch (error) {
+          console.error('Failed to initialize sample data:', error);
+          return;
+        }
       }
       
       setWorkspace(defaultWorkspace);

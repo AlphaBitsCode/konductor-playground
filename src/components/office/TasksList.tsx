@@ -5,6 +5,7 @@ import { CheckSquare, Plus, X } from "lucide-react";
 import { PixelWindow } from "@/components/ui/PixelWindow";
 import { getCurrentUser, getUserDefaultWorkspace, getWorkspaceTasks, createTask, updateChannelStatus } from "@/lib/pocketbase-utils";
 import { Task, User, Workspace } from "@/lib/types";
+import { initializeSampleDataForUser } from "@/lib/sample-data";
 import pb from "@/lib/pocketbase";
 
 interface TasksListProps {
@@ -37,10 +38,17 @@ export function TasksList({ workspaceId }: TasksListProps) {
       
       let targetWorkspaceId = workspaceId;
       if (!targetWorkspaceId) {
-        const defaultWorkspace = await getUserDefaultWorkspace(currentUser.id);
+        let defaultWorkspace = await getUserDefaultWorkspace(currentUser.id);
         if (!defaultWorkspace) {
-          console.error('No default workspace found');
-          return;
+          console.log('No default workspace found, initializing sample data...');
+          try {
+            const sampleData = await initializeSampleDataForUser(currentUser.id);
+            defaultWorkspace = sampleData.workspace;
+            console.log('Sample data initialized successfully:', sampleData.summary);
+          } catch (error) {
+            console.error('Failed to initialize sample data:', error);
+            return;
+          }
         }
         setWorkspace(defaultWorkspace);
         targetWorkspaceId = defaultWorkspace.id;

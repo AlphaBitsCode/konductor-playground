@@ -13,6 +13,7 @@ import { TasksList } from "@/components/office/TasksList";
 import { CalendarWidget } from "@/components/office/CalendarWidget";
 import { getCurrentUser, getUserDefaultWorkspace, getWorkspaceStats } from "@/lib/pocketbase-utils";
 import { User, Workspace } from "@/lib/types";
+import { initializeSampleDataForUser } from "@/lib/sample-data";
 
 export default function OfficeDashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -41,10 +42,17 @@ export default function OfficeDashboard() {
       
       setUser(currentUser);
       
-      const defaultWorkspace = await getUserDefaultWorkspace(currentUser.id);
+      let defaultWorkspace = await getUserDefaultWorkspace(currentUser.id);
       if (!defaultWorkspace) {
-        console.error('No default workspace found');
-        return;
+        console.log('No default workspace found, initializing sample data...');
+        try {
+          const sampleData = await initializeSampleDataForUser(currentUser.id);
+          defaultWorkspace = sampleData.workspace;
+          console.log('Sample data initialized successfully:', sampleData.summary);
+        } catch (error) {
+          console.error('Failed to initialize sample data:', error);
+          return;
+        }
       }
       
       setWorkspace(defaultWorkspace);

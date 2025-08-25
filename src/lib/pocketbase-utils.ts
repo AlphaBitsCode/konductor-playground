@@ -26,16 +26,16 @@ export async function getCurrentUser(): Promise<User | null> {
 }
 
 export async function updateUserMeta(userId: string, meta: Record<string, any>): Promise<User> {
-  return await pb.collection(COLLECTIONS.USERS).update(userId, { meta }) as unknown as User;
+  return await pb.collection('users').update(userId, { meta }) as unknown as User;
 }
 
 export async function updateUserStatus(userId: string, status: 'waitlist' | 'onboarding' | 'active'): Promise<User> {
-  return await pb.collection(COLLECTIONS.USERS).update(userId, { status }) as unknown as User;
+  return await pb.collection('users').update(userId, { status }) as unknown as User;
 }
 
 // Workspace Operations
 export async function createDefaultWorkspace(userId: string): Promise<Workspace> {
-  const workspace = await pb.collection(COLLECTIONS.WORKSPACES).create({
+  const workspace = await pb.collection('workspaces').create({
     name: 'Default Workspace',
     description: 'Main workspace for all activities',
     owner: userId,
@@ -48,7 +48,7 @@ export async function createDefaultWorkspace(userId: string): Promise<Workspace>
   }) as unknown as Workspace;
 
   // Update user's defaultWorkspace
-  await pb.collection(COLLECTIONS.USERS).update(userId, {
+  await pb.collection('users').update(userId, {
     defaultWorkspace: workspace.id
   });
 
@@ -56,14 +56,14 @@ export async function createDefaultWorkspace(userId: string): Promise<Workspace>
 }
 
 export async function getUserWorkspaces(userId: string): Promise<Workspace[]> {
-  return await pb.collection(COLLECTIONS.WORKSPACES).getFullList({
+  return await pb.collection('workspaces').getFullList({
     filter: `owner = "${userId}" || members.id ?= "${userId}"`
   }) as unknown as Workspace[];
 }
 
 export async function getUserDefaultWorkspace(userId: string): Promise<Workspace | null> {
   try {
-    const workspaces = await pb.collection(COLLECTIONS.WORKSPACES).getFullList({
+    const workspaces = await pb.collection('workspaces').getFullList({
       filter: `owner = "${userId}" && isDefault = true`
     }) as unknown as Workspace[];
     return workspaces[0] || null;
@@ -75,13 +75,13 @@ export async function getUserDefaultWorkspace(userId: string): Promise<Workspace
 
 // Channel Operations
 export async function getWorkspaceChannels(workspaceId: string): Promise<Channel[]> {
-  return await pb.collection(COLLECTIONS.CHANNELS).getFullList({
+  return await pb.collection('channels').getFullList({
     filter: `workspace = "${workspaceId}"`
   }) as unknown as Channel[];
 }
 
 export async function createChannel(data: Partial<Channel>): Promise<Channel> {
-  return await pb.collection(COLLECTIONS.CHANNELS).create(data) as unknown as Channel;
+  return await pb.collection('channels').create(data) as unknown as Channel;
 }
 
 export async function updateChannelStatus(channelId: string, status: Channel['status'], config?: Record<string, any>): Promise<Channel> {
@@ -89,7 +89,7 @@ export async function updateChannelStatus(channelId: string, status: Channel['st
   if (config) {
     updateData.config = config;
   }
-  return await pb.collection(COLLECTIONS.CHANNELS).update(channelId, updateData) as unknown as Channel;
+  return await pb.collection('channels').update(channelId, updateData) as unknown as Channel;
 }
 
 export async function initializeDefaultChannels(workspaceId: string): Promise<Channel[]> {
@@ -139,14 +139,14 @@ export async function initializeDefaultChannels(workspaceId: string): Promise<Ch
 
 // Task Operations
 export async function getWorkspaceTasks(workspaceId: string): Promise<Task[]> {
-  return await pb.collection(COLLECTIONS.TASKS).getFullList({
+  return await pb.collection('tasks').getFullList({
     filter: `workspace = "${workspaceId}"`,
     sort: '-created'
   }) as unknown as Task[];
 }
 
 export async function createTask(data: Partial<Task>): Promise<Task> {
-  return await pb.collection(COLLECTIONS.TASKS).create(data) as unknown as Task;
+  return await pb.collection('tasks').create(data) as unknown as Task;
 }
 
 export async function initializeDefaultTasks(workspaceId: string): Promise<Task[]> {
@@ -192,13 +192,13 @@ export async function initializeDefaultTasks(workspaceId: string): Promise<Task[
 
 // Minion Operations
 export async function getWorkspaceMinions(workspaceId: string): Promise<Minion[]> {
-  return await pb.collection(COLLECTIONS.MINIONS).getFullList({
+  return await pb.collection('minions').getFullList({
     filter: `workspace = "${workspaceId}"`
   }) as unknown as Minion[];
 }
 
 export async function createMinion(data: Partial<Minion>): Promise<Minion> {
-  return await pb.collection(COLLECTIONS.MINIONS).create(data) as unknown as Minion;
+  return await pb.collection('minions').create(data) as unknown as Minion;
 }
 
 export async function createDefaultMinion(workspaceId: string, assistantName: string = 'Alita'): Promise<Minion> {
@@ -217,14 +217,14 @@ export async function createDefaultMinion(workspaceId: string, assistantName: st
 
 // Calendar Operations
 export async function getWorkspaceCalendarEvents(workspaceId: string): Promise<CalendarEvent[]> {
-  return await pb.collection(COLLECTIONS.CALENDAR_EVENTS).getFullList({
+  return await pb.collection('calendar_events').getFullList({
     filter: `workspace = "${workspaceId}"`,
     sort: 'startTime'
   }) as unknown as CalendarEvent[];
 }
 
 export async function createCalendarEvent(data: Partial<CalendarEvent>): Promise<CalendarEvent> {
-  return await pb.collection(COLLECTIONS.CALENDAR_EVENTS).create(data) as unknown as CalendarEvent;
+  return await pb.collection('calendar_events').create(data) as unknown as CalendarEvent;
 }
 
 export async function initializeOnboardingCalendarEvent(workspaceId: string): Promise<CalendarEvent> {
@@ -312,7 +312,7 @@ export async function initializeUserOnboarding(userId: string): Promise<{
 }
 
 export async function updateOnboardingProgress(userId: string, step: OnboardingProgress['step'], additionalData?: Partial<OnboardingProgress>): Promise<void> {
-  const user = await pb.collection(COLLECTIONS.USERS).getOne(userId) as unknown as User;
+  const user = await pb.collection('users').getOne(userId) as unknown as User;
   const currentProgress = user.meta?.onboardingProgress || {};
   
   const updatedProgress: OnboardingProgress = {
@@ -338,7 +338,7 @@ export async function getWorkspaceStats(workspaceId: string) {
     const [channels, tasks, messages] = await Promise.all([
       getWorkspaceChannels(workspaceId),
       getWorkspaceTasks(workspaceId),
-      pb.collection(COLLECTIONS.MESSAGES).getFullList({
+      pb.collection('messages').getFullList({
         filter: `workspace = "${workspaceId}"`,
         fields: 'id'
       }) as unknown as { id: string }[]
