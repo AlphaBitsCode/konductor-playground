@@ -5,35 +5,35 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { loginUser, validateUsername, validateAccessCode } from "@/lib/login";
+import { loginUser, validateEmail, validatePassword } from "@/lib/login";
 
 export default function LoginForm() {
-  const [username, setUsername] = useState("");
-  const [accessCode, setAccessCode] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<{
-    username?: string;
-    accessCode?: string;
+    email?: string | null;
+    password?: string | null;
   }>({});
 
   const router = useRouter();
 
-  const handleUsernameChange = (value: string) => {
-    setUsername(value);
-    const usernameError = validateUsername(value);
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    const emailError = validateEmail(value);
     setValidationErrors(prev => ({
       ...prev,
-      username: usernameError
+      email: emailError
     }));
   };
 
-  const handleAccessCodeChange = (value: string) => {
-    setAccessCode(value);
-    const accessCodeError = validateAccessCode(value);
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    const passwordError = validatePassword(value);
     setValidationErrors(prev => ({
       ...prev,
-      accessCode: accessCodeError
+      password: passwordError
     }));
   };
 
@@ -43,13 +43,13 @@ export default function LoginForm() {
     if (isLoading) return;
 
     // Final validation
-    const usernameError = validateUsername(username);
-    const accessCodeError = validateAccessCode(accessCode);
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
     
-    if (usernameError || accessCodeError) {
+    if (emailError || passwordError) {
       setValidationErrors({
-        username: usernameError,
-        accessCode: accessCodeError
+        email: emailError,
+        password: passwordError
       });
       return;
     }
@@ -58,10 +58,10 @@ export default function LoginForm() {
     setError(null);
 
     try {
-      const result = await loginUser({ username, accessCode });
+      const result = await loginUser({ email, password });
       
       if (result.success) {
-        router.push("/town");
+        router.push("/office");
       } else {
         setError(result.error || "Login failed");
       }
@@ -73,7 +73,7 @@ export default function LoginForm() {
     }
   };
 
-  const canSubmit = username && accessCode && !validationErrors.username && !validationErrors.accessCode && !isLoading;
+  const canSubmit = email && password && !validationErrors.email && !validationErrors.password && !isLoading;
 
   return (
     <div className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-xl p-8 shadow-xl border border-white/20 relative z-10">
@@ -103,63 +103,56 @@ export default function LoginForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label
-            htmlFor="username"
+            htmlFor="email"
             className="block text-sm font-medium text-gray-300 mb-1"
           >
-            Konductor ID
+            Email
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-400 text-sm font-medium">
-              @
-            </span>
             <input
-              id="username"
-              name="username"
-              type="text"
+              id="email"
+              name="email"
+              type="email"
               required
-              value={username}
-              onChange={(e) => handleUsernameChange(e.target.value)}
-              className="w-full pl-8 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
-              placeholder="player.designation"
-              minLength={5}
-              maxLength={25}
-              pattern="^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?$"
+              value={email}
+              onChange={(e) => handleEmailChange(e.target.value)}
+              className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+              placeholder="your@email.com"
               disabled={isLoading}
             />
           </div>
-          {validationErrors.username && (
-            <p className="text-xs text-red-400 mt-1">{validationErrors.username}</p>
+          {validationErrors.email && (
+            <p className="text-xs text-red-400 mt-1">{validationErrors.email}</p>
           )}
           <p className="text-xs text-gray-400 mt-1">
-            Alphanumeric only, one dot allowed (5-25 chars)
+            Enter your email address
           </p>
         </div>
 
         <div>
           <label
-            htmlFor="accessCode"
+            htmlFor="password"
             className="block text-sm font-medium text-gray-300 mb-1"
           >
-            Access Code
+            Password
           </label>
           <input
-            id="accessCode"
-            name="accessCode"
+            id="password"
+            name="password"
             type="password"
             required
-            value={accessCode}
-            onChange={(e) => handleAccessCodeChange(e.target.value)}
+            value={password}
+            onChange={(e) => handlePasswordChange(e.target.value)}
             className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
-            placeholder="••••••"
-            maxLength={6}
-            pattern="[0-9]{6}"
+            placeholder="••••••••"
+            minLength={6}
             disabled={isLoading}
           />
-          {validationErrors.accessCode && (
-            <p className="text-xs text-red-400 mt-1">{validationErrors.accessCode}</p>
+          {validationErrors.password && (
+            <p className="text-xs text-red-400 mt-1">{validationErrors.password}</p>
           )}
           <p className="text-xs text-gray-400 mt-1">
-            6-digit numeric code from your invitation
+            Use your 6-digit beta access code as password
           </p>
         </div>
 

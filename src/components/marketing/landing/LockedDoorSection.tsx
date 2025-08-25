@@ -6,15 +6,17 @@ import { AnimatedEmailIcon } from "@/components/ui/AnimatedEmailIcon";
 export const LockedDoorSection = () => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [formStep, setFormStep] = useState(1); // 1 = username, 2 = email & submit
+  const [formStep, setFormStep] = useState(1); // 1 = username, 2 = password, 3 = email & submit
   const [doorAnimating, setDoorAnimating] = useState(false);
   const [showEmailAnimation, setShowEmailAnimation] = useState(false);
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -34,6 +36,16 @@ export const LockedDoorSection = () => {
       return "Username can contain at most one dot";
     }
 
+    return null;
+  };
+
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 6) {
+      return "Password must be at least 6 characters";
+    }
+    if (password.length > 50) {
+      return "Password must be less than 50 characters";
+    }
     return null;
   };
 
@@ -106,15 +118,32 @@ export const LockedDoorSection = () => {
       return;
     }
 
-    // Move to step 2
+    // Move to step 2 (password)
     setFormStep(2);
     setErrorMsg(null);
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const passwordValidationError = validatePassword(password);
+    if (!password || passwordValidationError) {
+      if (passwordValidationError) {
+        setPasswordError(passwordValidationError);
+      }
+      return;
+    }
+
+    // Move to step 3 (email)
+    setFormStep(3);
+    setErrorMsg(null);
+    setPasswordError(null);
   };
 
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !username || isSubmitting) {
+    if (!email || !username || !password || isSubmitting) {
       return;
     }
 
@@ -127,7 +156,7 @@ export const LockedDoorSection = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, username }),
+        body: JSON.stringify({ email, username, password }),
       });
 
       const data = await response.json();
@@ -141,6 +170,7 @@ export const LockedDoorSection = () => {
           setIsSubmitted(true);
           setEmail("");
           setUsername("");
+          setPassword("");
           setFormStep(1);
         }, 1000);
       } else {
@@ -150,6 +180,11 @@ export const LockedDoorSection = () => {
         if (data.error?.includes("Username")) {
           setFormStep(1);
           setUsernameError(data.error);
+        }
+        // If password error, go back to step 2
+        if (data.error?.includes("Password")) {
+          setFormStep(2);
+          setPasswordError(data.error);
         }
       }
     } catch (error) {
@@ -162,6 +197,11 @@ export const LockedDoorSection = () => {
 
   const handleBackToUsername = () => {
     setFormStep(1);
+    setErrorMsg(null);
+  };
+
+  const handleBackToPassword = () => {
+    setFormStep(2);
     setErrorMsg(null);
   };
 
@@ -304,6 +344,8 @@ export const LockedDoorSection = () => {
                 <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto">
                   {formStep === 1
                     ? "Choose your unique player designation for the beta program."
+                    : formStep === 2
+                    ? "Set a secure password for your account."
                     : "Your access code will be dispatched to your private channel."}
                 </p>
               </div>
@@ -329,7 +371,7 @@ export const LockedDoorSection = () => {
                   </div>
                   <div
                     className={`w-8 h-0.5 transition-colors ${
-                      formStep === 2 ? "bg-cyan-400" : "bg-slate-600"
+                      formStep >= 2 ? "bg-cyan-400" : "bg-slate-600"
                     }`}
                   ></div>
                   <div className="flex items-center">
@@ -337,6 +379,8 @@ export const LockedDoorSection = () => {
                       className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${
                         formStep === 2
                           ? "bg-cyan-400 text-slate-900"
+                          : formStep > 2
+                          ? "bg-green-400 text-slate-900"
                           : "bg-slate-600 text-slate-400"
                       }`}
                     >
@@ -344,7 +388,34 @@ export const LockedDoorSection = () => {
                     </div>
                     <span
                       className={`ml-2 font-medium transition-colors ${
-                        formStep === 2 ? "text-cyan-400" : "text-slate-400"
+                        formStep === 2
+                          ? "text-cyan-400"
+                          : formStep > 2
+                          ? "text-green-400"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      Security
+                    </span>
+                  </div>
+                  <div
+                    className={`w-8 h-0.5 transition-colors ${
+                      formStep === 3 ? "bg-cyan-400" : "bg-slate-600"
+                    }`}
+                  ></div>
+                  <div className="flex items-center">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${
+                        formStep === 3
+                          ? "bg-cyan-400 text-slate-900"
+                          : "bg-slate-600 text-slate-400"
+                      }`}
+                    >
+                      3
+                    </div>
+                    <span
+                      className={`ml-2 font-medium transition-colors ${
+                        formStep === 3 ? "text-cyan-400" : "text-slate-400"
                       }`}
                     >
                       Communication
@@ -429,8 +500,115 @@ export const LockedDoorSection = () => {
                       </span>
                     </button>
                   </form>
+                ) : formStep === 2 ? (
+                  /* Step 2: Password */
+                  <form
+                    onSubmit={handlePasswordSubmit}
+                    className="max-w-md mx-auto space-y-6"
+                  >
+                    <div className="glassmorphism rounded-lg p-6 space-y-4">
+                      {/* Username & Password Confirmation */}
+                      <div className="glassmorphism bg-slate-800/50 rounded-lg p-4 border border-cyan-400/30 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="pixel-font text-xs text-cyan-400">
+                              Konductor ID
+                            </span>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-cyan-400 pixel-font text-sm">
+                                @
+                              </span>
+                              <span className="text-white font-bold">
+                                {username}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleBackToUsername}
+                            className="text-xs text-gray-400 hover:text-cyan-400 transition-colors"
+                          >
+                            Change
+                          </button>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="pixel-font text-xs text-cyan-400">
+                              Password
+                            </span>
+                            <div className="text-white font-bold">
+                              {'•'.repeat(Math.min(password.length, 12))}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleBackToPassword}
+                            className="text-xs text-gray-400 hover:text-cyan-400 transition-colors"
+                          >
+                            Change
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="early-access-password"
+                          className="block pixel-font text-sm text-cyan-400 mb-2"
+                        >
+                          Password
+                        </label>
+                        <input
+                          id="early-access-password"
+                          type="password"
+                          value={password}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            const error = validatePassword(e.target.value);
+                            setPasswordError(error);
+                          }}
+                          placeholder="Enter secure password"
+                          className={`w-full px-4 py-3 bg-slate-800 border-2 rounded-lg text-white placeholder-gray-400 focus:outline-none transition-colors duration-200 ${
+                            passwordError
+                              ? "border-red-400 focus:border-red-400"
+                              : "border-gray-600 focus:border-cyan-400"
+                          }`}
+                          required
+                          minLength={6}
+                          maxLength={50}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          Minimum 6 characters
+                        </p>
+                        {passwordError && (
+                          <p className="text-red-400 text-xs mt-1">
+                            {passwordError}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex space-x-3">
+                      <button
+                        type="button"
+                        onClick={handleBackToUsername}
+                        className="flex-1 pixel-button glassmorphism px-6 py-4 rounded-lg border-2 border-gray-600 text-gray-400 hover:bg-gray-600 hover:text-white transition-all duration-300"
+                      >
+                        <span className="pixel-font text-sm">← BACK</span>
+                      </button>
+
+                      <button
+                        type="submit"
+                        disabled={!password || !!passwordError}
+                        className="flex-[2] pixel-button glassmorphism px-6 py-4 rounded-lg border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                      >
+                        <span className="pixel-font text-sm">
+                          SET PASSWORD →
+                        </span>
+                      </button>
+                    </div>
+                  </form>
                 ) : (
-                  /* Step 2: Email & Submit */
+                  /* Step 3: Email & Submit */
                   <form
                     onSubmit={handleFinalSubmit}
                     className="max-w-md mx-auto space-y-6"
@@ -488,7 +666,7 @@ export const LockedDoorSection = () => {
                     <div className="flex space-x-3">
                       <button
                         type="button"
-                        onClick={handleBackToUsername}
+                        onClick={handleBackToPassword}
                         disabled={isSubmitting}
                         className="flex-1 pixel-button glassmorphism px-6 py-4 rounded-lg border-2 border-gray-600 text-gray-400 hover:bg-gray-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                       >

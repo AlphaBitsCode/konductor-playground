@@ -2,7 +2,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { loginUser, validateUsername, validateAccessCode } from "@/lib/login";
+import { loginUser, validateEmail, validatePassword } from "@/lib/login";
 
 type SlidingDoorProps = {
   scrollY: number;
@@ -16,8 +16,8 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
 
   // State for login popup
   const [showLoginPopup, setShowLoginPopup] = useState(false);
-  const [loginUsername, setLoginUsername] = useState("");
-  const [loginAccessCode, setLoginAccessCode] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [showCrypticMessage, setShowCrypticMessage] = useState(false);
@@ -35,8 +35,8 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
   const closePopup = () => {
     setShowLoginPopup(false);
     setLoginError(null);
-    setLoginUsername("");
-    setLoginAccessCode("");
+    setLoginEmail("");
+    setLoginPassword("");
     if (
       animationFrameRef.current === null &&
       scrollY / totalPageHeight > 0.85
@@ -49,7 +49,7 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!loginUsername || !loginAccessCode || isLoggingIn) {
+    if (!loginEmail || !loginPassword || isLoggingIn) {
       return;
     }
 
@@ -58,8 +58,8 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
 
     try {
       const result = await loginUser({
-        username: loginUsername,
-        accessCode: loginAccessCode
+        email: loginEmail,
+        password: loginPassword
       });
 
       if (result.success) {
@@ -67,7 +67,7 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
         setShowCrypticMessage(true);
 
         setTimeout(() => {
-          window.location.href = '/town';
+          window.location.href = '/office';
         }, 2000);
       } else {
         setLoginError(result.error || "Access denied. Invalid credentials or insufficient clearance level.");
@@ -80,10 +80,10 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
     }
   };
 
-  // Handle username change with validation
-  const handleUsernameChange = (value: string) => {
-    setLoginUsername(value);
-    const error = validateUsername(value);
+  // Handle email change with validation
+  const handleEmailChange = (value: string) => {
+    setLoginEmail(value);
+    const error = validateEmail(value);
     if (error && value.length > 0) {
       setLoginError(error);
     } else {
@@ -91,10 +91,10 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
     }
   };
 
-  // Handle access code change with validation
-  const handleAccessCodeChange = (value: string) => {
-    setLoginAccessCode(value);
-    const error = validateAccessCode(value);
+  // Handle password change with validation
+  const handlePasswordChange = (value: string) => {
+    setLoginPassword(value);
+    const error = validatePassword(value);
     if (error && value.length > 0) {
       setLoginError(error);
     } else {
@@ -165,7 +165,7 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
     }
   };
 
-  const canSubmit = loginUsername && loginAccessCode && !validateUsername(loginUsername) && !validateAccessCode(loginAccessCode) && !isLoggingIn;
+  const canSubmit = loginEmail && loginPassword && !validateEmail(loginEmail) && !validatePassword(loginPassword) && !isLoggingIn;
 
   return (
     <>
@@ -228,44 +228,39 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label
-                  htmlFor="login-username"
+                  htmlFor="login-email"
                   className="block pixel-font text-sm text-cyan-400 mb-2"
                 >
-                  Konductor ID
+                  Email
                 </label>
                 <input
-                  id="login-username"
-                  type="text"
-                  value={loginUsername}
-                  onChange={(e) => handleUsernameChange(e.target.value)}
-                  placeholder="enter_designation"
+                  id="login-email"
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  placeholder="your@email.com"
                   className="w-full px-4 py-3 bg-slate-800 border-2 border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none transition-colors duration-200"
                   required
                   disabled={isLoggingIn}
-                  minLength={5}
-                  maxLength={25}
-                  pattern="^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?$"
                 />
               </div>
 
               <div>
                 <label
-                  htmlFor="login-accesscode"
+                  htmlFor="login-password"
                   className="block pixel-font text-sm text-cyan-400 mb-2"
                 >
-                  Access Code
+                  Password
                 </label>
                 <input
-                  id="login-accesscode"
+                  id="login-password"
                   type="password"
-                  value={loginAccessCode}
-                  onChange={(e) => handleAccessCodeChange(e.target.value)}
+                  value={loginPassword}
+                  onChange={(e) => handlePasswordChange(e.target.value)}
                   placeholder="••••••••"
                   className="w-full px-4 py-3 bg-slate-800 border-2 border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none transition-colors duration-200"
                   required
                   disabled={isLoggingIn}
-                  maxLength={6}
-                  pattern="[0-9]{6}"
                 />
               </div>
 

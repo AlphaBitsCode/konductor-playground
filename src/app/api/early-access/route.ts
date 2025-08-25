@@ -17,14 +17,9 @@ function cleanupEmail(email: string): string {
   return cleanedEmail.toLowerCase().trim();
 }
 
-// Generate 6-digit numeric beta access code
-function generateBetaAccessCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
 export async function POST(request: NextRequest) {
   try {
-    const { email, username } = await request.json();
+    const { email, username, password } = await request.json();
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -32,6 +27,19 @@ export async function POST(request: NextRequest) {
 
     if (!username) {
       return NextResponse.json({ error: 'Username is required' }, { status: 400 });
+    }
+
+    if (!password) {
+      return NextResponse.json({ error: 'Password is required' }, { status: 400 });
+    }
+
+    // Validate password
+    if (password.length < 6) {
+      return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
+    }
+
+    if (password.length > 50) {
+      return NextResponse.json({ error: 'Password must be less than 50 characters' }, { status: 400 });
     }
 
     // Clean up email
@@ -96,10 +104,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate password and beta access code
-    const generatePassword = () =>
-      Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-    const password = generatePassword().slice(0, 16);
+    // Use provided password and generate beta access code
+    function generateBetaAccessCode(): string {
+      return Math.floor(100000 + Math.random() * 900000).toString();
+    }
     const betaAccessCode = generateBetaAccessCode();
 
     let createdUserId: string | null = null;

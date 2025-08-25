@@ -16,6 +16,8 @@ import {
   ChevronDown,
   ChevronRight,
   Users,
+  Settings,
+  LogOut,
 } from "lucide-react";
 
 type NavigationItem = {

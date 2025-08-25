@@ -1,9 +1,10 @@
 
 import { ClientResponseError } from 'pocketbase';
+import pb from './pocketbase';
 
 export interface LoginCredentials {
-  username: string;
-  accessCode: string;
+  email: string;
+  password: string;
 }
 
 export interface LoginResult {
@@ -19,52 +20,130 @@ export interface LoginResult {
   };
 }
 
-export function validateUsername(username: string): string | null {
-  if (!username) {
-    return "Username is required";
+export function validateEmail(email: string): string | null {
+  if (!email) {
+    return "Email is required";
   }
   
-  if (username.length < 5 || username.length > 25) {
-    return "Username must be between 5 and 25 characters";
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return "Please enter a valid email address";
   }
 
-  const validPattern = /^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?$/;
-  if (!validPattern.test(username)) {
-    return "Username can only contain letters, numbers, and one dot";
-  }
-
-  const dotCount = (username.match(/\./g) || []).length;
-  if (dotCount > 1) {
-    return "Username can contain at most one dot";
+  if (email.length > 254) {
+    return "Email address is too long";
   }
 
   return null;
 }
 
-export function validateAccessCode(accessCode: string): string | null {
-  if (!accessCode) {
-    return "Access code is required";
+export function validatePassword(password: string): string | null {
+  if (!password) {
+    return "Password is required";
   }
   
-  const accessCodeRegex = /^[0-9]{6}$/;
-  if (!accessCodeRegex.test(accessCode)) {
-    return "Access code must be 6 digits";
+  if (password.length < 6) {
+    return "Password must be at least 6 characters";
   }
   return null;
 }
 
 export async function loginUser(credentials: LoginCredentials): Promise<LoginResult> {
-  const { username, accessCode } = credentials;
+  const { email, password } = credentials;
 
   // Validate inputs
-  const usernameError = validateUsername(username);
-  if (usernameError) {
-    return { success: false, error: usernameError };
+  const emailError = validateEmail(email);
+  if (emailError) {
+    return { success: false, error: emailError };
   }
 
-  const accessCodeError = validateAccessCode(accessCode);
-  if (accessCodeError) {
-    return { success: false, error: accessCodeError };
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    return { success: false, error: passwordError };
+  }
+
+  try {
+    // Use PocketBase authWithPassword for authentication
+    const authData = await pb.collection('users').authWithPassword(email, password);
+    
+    if (pb.authStore.isValid && authData.record) {
+      return {
+        success: true,
+        user: {
+          id: authData.record.id,
+          username: authData.record.username,
+          email: authData.record.email,
+          verified: authData.record.verified || true,
+          betaAccessCode: authData.record.betaAccessCode,
+          waitlistNumber: authData.record.meta?.waitlist_number || null
+        }
+      };
+    } else {
+      return {
+        success: false,
+        error: "Authentication failed. Invalid credentials."
+      };
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    
+    if (error instanceof ClientResponseError) {
+      if (error.status === 400) {
+        return {
+          success: false,
+          error: "Invalid username or password."
+        };
+      }
+    }
+    
+    return {
+      success: false,
+      error: "Connection failed. Please try again."
+    };
+  }
+}
+
+// Logout function
+export function logoutUser(): void {
+  // Clear PocketBase auth store
+  pb.authStore.clear();
+  
+  // Clear any client-side cookies if they exist
+  if (typeof document !== 'undefined') {
+    document.cookie = 'pb_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+  }
+}
+
+// Check if user is authenticated
+export function isAuthenticated(): boolean {
+  return pb.authStore.isValid;
+}
+
+// Get current user data
+export function getCurrentUser() {
+  if (pb.authStore.isValid && pb.authStore.record) {
+    return {
+      id: pb.authStore.record.id,
+      username: pb.authStore.record.username,
+      email: pb.authStore.record.email,
+      verified: pb.authStore.record.verified || true,
+      betaAccessCode: pb.authStore.record.betaAccessCode,
+      waitlistNumber: pb.authStore.record.meta?.waitlist_number || null
+    };
+  }
+  return null;
+}
+
+// Create user with betaAccessCode as password
+export async function createUserWithBetaCode(email: string, betaAccessCode: string): Promise<LoginResult> {
+  const emailError = validateEmail(email);
+  if (emailError) {
+    return { success: false, error: emailError };
+  }
+
+  const passwordError = validatePassword(betaAccessCode);
+  if (passwordError) {
+    return { success: false, error: passwordError };
   }
 
   try {
@@ -73,18 +152,12 @@ export async function loginUser(credentials: LoginCredentials): Promise<LoginRes
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username, accessCode }),
+      body: JSON.stringify({ email, betaAccessCode }),
     });
 
     const data = await response.json();
 
     if (response.ok && data.success) {
-      // Set client-side auth cookie
-      document.cookie = `pb_auth=${encodeURIComponent(JSON.stringify({
-        token: `beta_${username}_${Date.now()}`,
-        model: data.user
-      }))}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=strict${process.env.NODE_ENV === 'production' ? '; secure' : ''}`;
-
       return {
         success: true,
         user: data.user
@@ -92,14 +165,14 @@ export async function loginUser(credentials: LoginCredentials): Promise<LoginRes
     } else {
       return {
         success: false,
-        error: data.error || "Access denied. Invalid credentials or insufficient clearance level."
+        error: data.error || "Failed to create user account."
       };
     }
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('User creation error:', error);
     return {
       success: false,
-      error: "Connection failed. Network protocols may be compromised."
+      error: "Connection failed. Please try again."
     };
   }
 }
