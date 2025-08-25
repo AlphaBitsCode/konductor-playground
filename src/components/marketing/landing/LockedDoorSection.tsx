@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -9,6 +10,7 @@ export const LockedDoorSection = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [formStep, setFormStep] = useState(1); // 1 = username, 2 = email & submit
   const [doorAnimating, setDoorAnimating] = useState(false);
   const [showEmailAnimation, setShowEmailAnimation] = useState(false);
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
@@ -77,20 +79,31 @@ export const LockedDoorSection = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleUsernameSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     const usernameValidationError = validateUsername(username);
-    if (!email || !username || usernameValidationError || isSubmitting) {
+    if (!username || usernameValidationError || usernameError || isCheckingUsername) {
       if (usernameValidationError) {
         setUsernameError(usernameValidationError);
       }
       return;
     }
 
+    // Move to step 2
+    setFormStep(2);
+    setErrorMsg(null);
+  };
+
+  const handleFinalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email || !username || isSubmitting) {
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMsg(null);
-    setUsernameError(null);
 
     try {
       const response = await fetch("/api/early-access", {
@@ -112,10 +125,16 @@ export const LockedDoorSection = () => {
           setIsSubmitted(true);
           setEmail("");
           setUsername("");
+          setFormStep(1);
         }, 1000);
       } else {
         console.error("Signup failed:", data.error);
         setErrorMsg(data.error || "Something went wrong. Please try again.");
+        // If username error, go back to step 1
+        if (data.error?.includes("Username")) {
+          setFormStep(1);
+          setUsernameError(data.error);
+        }
       }
     } catch (error) {
       console.error("Signup failed:", error);
@@ -125,6 +144,11 @@ export const LockedDoorSection = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleBackToUsername = () => {
+    setFormStep(1);
+    setErrorMsg(null);
   };
 
   const handleDoorClick = () => {
@@ -255,7 +279,7 @@ export const LockedDoorSection = () => {
               </div>
             </div>
           ) : (
-            /* Early Access Form */
+            /* Multi-Step Early Access Form */
             <div className="space-y-8 animate-fade-in">
               <div className="space-y-4">
                 <h2 className="pixel-font text-3xl md:text-5xl text-white mb-4">
@@ -264,17 +288,49 @@ export const LockedDoorSection = () => {
                   </span>
                 </h2>
                 <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto">
-                  Join the exclusive beta program and be among the first to
-                  experience the future of work.
+                  {formStep === 1 ? 
+                    "Choose your unique player designation for the beta program." :
+                    "Your access code will be dispatched to your secure channel."
+                  }
                 </p>
               </div>
 
+              {/* Step Indicator */}
+              <div className="flex justify-center mb-8">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-slate-900 font-bold text-sm transition-colors ${
+                      formStep === 1 ? 'bg-cyan-400' : 'bg-green-400'
+                    }`}>
+                      1
+                    </div>
+                    <span className={`ml-2 font-medium transition-colors ${
+                      formStep === 1 ? 'text-cyan-400' : 'text-green-400'
+                    }`}>Username</span>
+                  </div>
+                  <div className={`w-8 h-0.5 transition-colors ${
+                    formStep === 2 ? 'bg-cyan-400' : 'bg-slate-600'
+                  }`}></div>
+                  <div className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${
+                      formStep === 2 ? 'bg-cyan-400 text-slate-900' : 'bg-slate-600 text-slate-400'
+                    }`}>
+                      2
+                    </div>
+                    <span className={`ml-2 font-medium transition-colors ${
+                      formStep === 2 ? 'text-cyan-400' : 'text-slate-400'
+                    }`}>Contact</span>
+                  </div>
+                </div>
+              </div>
+
               {!isSubmitted ? (
-                <form
-                  onSubmit={handleSubmit}
-                  className="max-w-md mx-auto space-y-6"
-                >
-                  <div className="space-y-4">
+                formStep === 1 ? (
+                  /* Step 1: Username */
+                  <form
+                    onSubmit={handleUsernameSubmit}
+                    className="max-w-md mx-auto space-y-6"
+                  >
                     <div className="glassmorphism rounded-lg p-6 space-y-4">
                       <div>
                         <label
@@ -302,7 +358,7 @@ export const LockedDoorSection = () => {
                                 : "border-gray-600 focus:border-cyan-400"
                             }`}
                             required
-                            disabled={isSubmitting}
+                            disabled={isCheckingUsername}
                             minLength={5}
                             maxLength={25}
                           />
@@ -321,14 +377,55 @@ export const LockedDoorSection = () => {
                           </p>
                         )}
                       </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={
+                        !username || !!usernameError || isCheckingUsername
+                      }
+                      className="w-full pixel-button glassmorphism px-6 py-4 rounded-lg border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                    >
+                      <span className="pixel-font text-sm">
+                        VALIDATE USERNAME →
+                      </span>
+                    </button>
+                  </form>
+                ) : (
+                  /* Step 2: Email & Submit */
+                  <form
+                    onSubmit={handleFinalSubmit}
+                    className="max-w-md mx-auto space-y-6"
+                  >
+                    <div className="glassmorphism rounded-lg p-6 space-y-4">
+                      {/* Username Confirmation */}
+                      <div className="glassmorphism bg-slate-800/50 rounded-lg p-4 border border-cyan-400/30">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="pixel-font text-xs text-cyan-400">
+                              PLAYER ID
+                            </span>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-cyan-400 pixel-font text-sm">@</span>
+                              <span className="text-white font-bold">{username}</span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleBackToUsername}
+                            className="text-xs text-gray-400 hover:text-cyan-400 transition-colors"
+                          >
+                            Change
+                          </button>
+                        </div>
+                      </div>
 
                       <div>
-                        {/** Associate label with input for a11y */}
                         <label
                           htmlFor="early-access-email"
                           className="block pixel-font text-sm text-cyan-400 mb-2"
                         >
-                          Email Address
+                          Secure Channel
                         </label>
                         <input
                           id="early-access-email"
@@ -340,29 +437,41 @@ export const LockedDoorSection = () => {
                           required
                           disabled={isSubmitting}
                         />
+                        <p className="text-xs text-gray-400 mt-1">
+                          Your access code will be sent here
+                        </p>
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      disabled={
-                        !email || !username || !!usernameError || isSubmitting
-                      }
-                      className="w-full pixel-button glassmorphism px-6 py-4 rounded-lg border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-                    >
-                      {isSubmitting ? (
-                        <div className="flex items-center justify-center space-x-2">
-                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    <div className="flex space-x-3">
+                      <button
+                        type="button"
+                        onClick={handleBackToUsername}
+                        disabled={isSubmitting}
+                        className="flex-1 pixel-button glassmorphism px-6 py-4 rounded-lg border-2 border-gray-600 text-gray-400 hover:bg-gray-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                      >
+                        <span className="pixel-font text-sm">← BACK</span>
+                      </button>
+
+                      <button
+                        type="submit"
+                        disabled={!email || isSubmitting}
+                        className="flex-[2] pixel-button glassmorphism px-6 py-4 rounded-lg border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                      >
+                        {isSubmitting ? (
+                          <div className="flex items-center justify-center space-x-2">
+                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            <span className="pixel-font text-sm">
+                              PROCESSING...
+                            </span>
+                          </div>
+                        ) : (
                           <span className="pixel-font text-sm">
-                            PROCESSING...
+                            RESERVE TICKET
                           </span>
-                        </div>
-                      ) : (
-                        <span className="pixel-font text-sm">
-                          REQUEST EARLY ACCESS
-                        </span>
-                      )}
-                    </button>
+                        )}
+                      </button>
+                    </div>
 
                     {errorMsg && (
                       <p
@@ -372,8 +481,8 @@ export const LockedDoorSection = () => {
                         {errorMsg}
                       </p>
                     )}
-                  </div>
-                </form>
+                  </form>
+                )
               ) : (
                 <div className="max-w-md mx-auto glassmorphism rounded-lg p-8 border-2 border-cyan-400">
                   <div className="text-6xl mb-4">📬</div>
