@@ -20,6 +20,10 @@ export interface LoginResult {
 }
 
 export function validateUsername(username: string): string | null {
+  if (!username) {
+    return "Username is required";
+  }
+  
   if (username.length < 5 || username.length > 25) {
     return "Username must be between 5 and 25 characters";
   }
@@ -38,6 +42,10 @@ export function validateUsername(username: string): string | null {
 }
 
 export function validateAccessCode(accessCode: string): string | null {
+  if (!accessCode) {
+    return "Access code is required";
+  }
+  
   const accessCodeRegex = /^[0-9]{6}$/;
   if (!accessCodeRegex.test(accessCode)) {
     return "Access code must be 6 digits";

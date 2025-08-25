@@ -1,13 +1,15 @@
+
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { loginUser, validateUsername, validateAccessCode } from "@/lib/login";
 
 type SlidingDoorProps = {
   scrollY: number;
 };
 
 export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
-  const [doorPosition, setDoorPosition] = useState(100); // Start completely hidden (100% = fully below screen)
+  const [doorPosition, setDoorPosition] = useState(100);
   const [totalPageHeight, setTotalPageHeight] = useState(0);
   const doorRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -15,24 +17,26 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
   // State for login popup
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [loginUsername, setLoginUsername] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
+  const [loginAccessCode, setLoginAccessCode] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null); // State for login errors
-  const [showCrypticMessage, setShowCrypticMessage] = useState(false); // State for cryptic success message
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [showCrypticMessage, setShowCrypticMessage] = useState(false);
 
   // Function to open the login popup
   const openPopup = () => {
     setShowLoginPopup(true);
-    setDoorPosition(100); // Hide door when popup opens
+    setDoorPosition(100);
     if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current); // Stop door animation
+      cancelAnimationFrame(animationFrameRef.current);
     }
   };
 
   // Function to close the login popup
   const closePopup = () => {
     setShowLoginPopup(false);
-    // Re-enable door animation if needed, or just keep it hidden
+    setLoginError(null);
+    setLoginUsername("");
+    setLoginAccessCode("");
     if (
       animationFrameRef.current === null &&
       scrollY / totalPageHeight > 0.85
@@ -45,7 +49,7 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!loginUsername || !loginPassword || isLoggingIn) {
+    if (!loginUsername || !loginAccessCode || isLoggingIn) {
       return;
     }
 
@@ -53,19 +57,15 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
     setLoginError(null);
 
     try {
-      const { loginUser } = await import('@/lib/login');
-      
       const result = await loginUser({
         username: loginUsername,
-        accessCode: loginPassword
+        accessCode: loginAccessCode
       });
 
       if (result.success) {
-        // Show cryptic success message briefly
         setLoginError(null);
         setShowCrypticMessage(true);
 
-        // Redirect to town after brief delay
         setTimeout(() => {
           window.location.href = '/town';
         }, 2000);
@@ -80,16 +80,25 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
     }
   };
 
-  // Validate username format
-  const validateUsername = async (username: string) => {
-    setLoginUsername(username);
-    
-    try {
-      const { validateUsername: validate } = await import('@/lib/login');
-      const error = validate(username);
-      return error || "";
-    } catch {
-      return "";
+  // Handle username change with validation
+  const handleUsernameChange = (value: string) => {
+    setLoginUsername(value);
+    const error = validateUsername(value);
+    if (error && value.length > 0) {
+      setLoginError(error);
+    } else {
+      setLoginError(null);
+    }
+  };
+
+  // Handle access code change with validation
+  const handleAccessCodeChange = (value: string) => {
+    setLoginAccessCode(value);
+    const error = validateAccessCode(value);
+    if (error && value.length > 0) {
+      setLoginError(error);
+    } else {
+      setLoginError(null);
     }
   };
 
@@ -99,23 +108,18 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
       const scrollProgress =
         totalPageHeight > 0 ? Math.min(scrollY / totalPageHeight, 1) : 0;
 
-      // Start showing the door when we're 85% through the page (character approaching bottom)
       const doorTriggerPoint = 0.85;
 
       if (scrollProgress >= doorTriggerPoint) {
-        // Calculate how much the door should slide up
         const doorProgress =
           (scrollProgress - doorTriggerPoint) / (1 - doorTriggerPoint);
 
-        // Smooth easing function for door animation
         const easeOutCubic = (t: number): number => 1 - (1 - t) ** 3;
         const easedProgress = easeOutCubic(Math.min(doorProgress, 1));
 
-        // Door position: 100% = hidden, 0% = fully visible
-        const newPosition = 100 - easedProgress * 60; // Show 60% of the door
+        const newPosition = 100 - easedProgress * 60;
         setDoorPosition(newPosition);
       } else {
-        // Keep door hidden when not near the bottom
         setDoorPosition(100);
       }
     }
@@ -125,7 +129,6 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
 
   // Animation loop
   useEffect(() => {
-    // Only start animation if popup is not shown
     if (!showLoginPopup) {
       animationFrameRef.current = requestAnimationFrame(animateDoor);
     }
@@ -156,24 +159,25 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
     };
   }, []);
 
-  // Make the door clickable to open the popup
   const handleDoorClick = () => {
     if (!showLoginPopup) {
       openPopup();
     }
   };
 
+  const canSubmit = loginUsername && loginAccessCode && !validateUsername(loginUsername) && !validateAccessCode(loginAccessCode) && !isLoggingIn;
+
   return (
     <>
       <div
-        className="fixed z-[100] pointer-events-auto cursor-pointer" // Changed to pointer-events-auto and added cursor-pointer
+        className="fixed z-[100] pointer-events-auto cursor-pointer"
         ref={doorRef}
-        onClick={handleDoorClick} // Added click handler
+        onClick={handleDoorClick}
         style={{
-          left: "14%", // Position to the left of the walking character (which is at 15%)
+          left: "14%",
           bottom: "2%",
           transform: `translateY(${doorPosition}%)`,
-          transition: "none", // We're handling animation manually
+          transition: "none",
           willChange: "transform",
         }}
       >
@@ -233,12 +237,7 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
                   id="login-username"
                   type="text"
                   value={loginUsername}
-                  onChange={async (e) => {
-                    const target = e.target as HTMLInputElement;
-                    const validationError = await validateUsername(target.value);
-                    setLoginUsername(target.value);
-                    setLoginError(validationError); // Show validation error immediately
-                  }}
+                  onChange={(e) => handleUsernameChange(e.target.value)}
                   placeholder="enter_designation"
                   className="w-full px-4 py-3 bg-slate-800 border-2 border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none transition-colors duration-200"
                   required
@@ -251,20 +250,22 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
 
               <div>
                 <label
-                  htmlFor="login-password"
+                  htmlFor="login-accesscode"
                   className="block pixel-font text-sm text-cyan-400 mb-2"
                 >
                   Access Code
                 </label>
                 <input
-                  id="login-password"
+                  id="login-accesscode"
                   type="password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
+                  value={loginAccessCode}
+                  onChange={(e) => handleAccessCodeChange(e.target.value)}
                   placeholder="••••••••"
                   className="w-full px-4 py-3 bg-slate-800 border-2 border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none transition-colors duration-200"
                   required
                   disabled={isLoggingIn}
+                  maxLength={6}
+                  pattern="[0-9]{6}"
                 />
               </div>
 
@@ -285,7 +286,7 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
                 </button>
                 <button
                   type="submit"
-                  disabled={!loginUsername || !loginPassword || isLoggingIn}
+                  disabled={!canSubmit}
                   className="flex-1 pixel-font text-sm px-4 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoggingIn ? (
@@ -320,8 +321,8 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
       <style jsx>
         {`
           .door-container {
-            width: 100px; /* Twice bigger: 50px * 2 = 100px */
-            height: 150px; /* Twice bigger: 75px * 2 = 150px */
+            width: 100px;
+            height: 150px;
             position: relative;
           }
 
@@ -329,8 +330,8 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
             width: 100%;
             height: 100%;
             background: #8b4513;
-            border: 2px solid #654321; /* Bigger border */
-            border-radius: 4px 4px 0 0; /* Bigger radius */
+            border: 2px solid #654321;
+            border-radius: 4px 4px 0 0;
             position: relative;
             display: flex;
             image-rendering: pixelated;
@@ -349,7 +350,7 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
               #a0522d 50%,
               #8b4513 100%
             );
-            border: 2px solid #654321; /* Bigger border */
+            border: 2px solid #654321;
           }
 
           .door-left {
@@ -366,8 +367,8 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
             width: 60%;
             height: 40%;
             background: rgba(0, 50, 100, 0.8);
-            border: 1px solid #4a5568; /* Bigger border */
-            border-radius: 2px; /* Bigger radius */
+            border: 1px solid #4a5568;
+            border-radius: 2px;
             position: absolute;
             top: 20%;
             left: 50%;
@@ -400,7 +401,7 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
           }
 
           .door-handle {
-            width: 4px; /* Twice bigger handles */
+            width: 4px;
             height: 4px;
             background: #ffd700;
             border: 1px solid #b8860b;
@@ -412,35 +413,35 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
           }
 
           .door-handle-left {
-            right: 6px; /* Adjusted for bigger door */
+            right: 6px;
           }
 
           .door-handle-right {
-            left: 6px; /* Adjusted for bigger door */
+            left: 6px;
           }
 
           .door-sign {
             position: absolute;
-            top: -24px; /* Bigger offset */
+            top: -24px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(139, 69, 19, 0.9);
             border: 1px solid #654321;
             border-radius: 2px;
-            padding: 2px 6px; /* Bigger padding */
+            padding: 2px 6px;
             text-align: center;
-            min-width: 60px; /* Bigger sign */
+            min-width: 60px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-            font-size: 8px !important; /* Bigger text */
+            font-size: 8px !important;
           }
 
           .door-shadow {
             position: absolute;
-            bottom: -6px; /* Bigger offset */
+            bottom: -6px;
             left: 50%;
             transform: translateX(-50%);
-            width: 120px; /* Twice bigger shadow */
-            height: 16px; /* Twice bigger shadow */
+            width: 120px;
+            height: 16px;
             background: radial-gradient(
               ellipse at center,
               rgba(0, 0, 0, 0.4) 0%,
@@ -451,10 +452,9 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
             filter: blur(2px);
           }
 
-          /* Mobile responsive styles - bigger on mobile too */
           @media (max-width: 768px) {
             .door-container {
-              width: 60px; /* Twice bigger on mobile */
+              width: 60px;
               height: 90px;
             }
 
@@ -500,7 +500,6 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
             }
           }
 
-          /* Subtle glow effect for interactivity hint */
           .door-frame:hover {
             box-shadow:
               inset 0 0 0 2px #a0522d,
@@ -508,7 +507,6 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
               0 0 16px rgba(255, 215, 0, 0.2);
           }
 
-          /* Add subtle wood grain texture */
           .door-panel::before {
             content: "";
             position: absolute;
@@ -526,14 +524,8 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
             pointer-events: none;
           }
 
-          /* Glassmorphism style for the popup */
           .glassmorphism {
-            background: rgba(
-              40,
-              44,
-              52,
-              0.8
-            ); /* Dark background with transparency */
+            background: rgba(40, 44, 52, 0.8);
             border-radius: 10px;
             box-shadow:
               0 8px 32px 0 rgba(0, 0, 0, 0.3),
@@ -542,10 +534,8 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
             -webkit-backdrop-filter: blur(10px);
           }
 
-          /* Pixel font style */
           .pixel-font {
-            font-family:
-              "Press Start 2P", cursive; /* Assuming you have this font imported or available */
+            font-family: "Press Start 2P", cursive;
           }
         `}
       </style>

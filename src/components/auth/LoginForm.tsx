@@ -1,64 +1,79 @@
+
 "use client";
 
-import { login, type ActionResult } from "@/app/actions";
 import Link from "next/link";
-import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-
-const initialState: ActionResult = {
-  success: false,
-  error: null,
-};
+import { loginUser, validateUsername, validateAccessCode } from "@/lib/login";
 
 export default function LoginForm() {
   const [username, setUsername] = useState("");
   const [accessCode, setAccessCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<{
+    username?: string;
+    accessCode?: string;
+  }>({});
 
   const router = useRouter();
-  const [state, formAction] = useActionState(
-    async (_: ActionResult, formData: FormData) => {
-      const username = formData.get("username") as string;
-      const accessCode = formData.get("accessCode") as string;
 
-      try {
-        const { loginUser } = await import('@/lib/login');
-        
-        const result = await loginUser({ username, accessCode });
-        
-        if (result.success) {
-          return { success: true };
-        } else {
-          return { success: false, error: result.error || "Login failed" };
-        }
-      } catch (error) {
-        console.error("Login failed:", error);
-        return { success: false, error: "Login failed. Please try again." };
-      }
-    },
-    initialState,
-  );
-
-  // Redirect on success
-  useEffect(() => {
-    if (state?.success) {
-      router.push("/town");
-    }
-  }, [state?.success, router]);
-
-  const [validationError, setValidationError] = useState<string | null>(null);
-
-  const handleUsernameChange = async (value: string) => {
+  const handleUsernameChange = (value: string) => {
     setUsername(value);
+    const usernameError = validateUsername(value);
+    setValidationErrors(prev => ({
+      ...prev,
+      username: usernameError
+    }));
+  };
+
+  const handleAccessCodeChange = (value: string) => {
+    setAccessCode(value);
+    const accessCodeError = validateAccessCode(value);
+    setValidationErrors(prev => ({
+      ...prev,
+      accessCode: accessCodeError
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isLoading) return;
+
+    // Final validation
+    const usernameError = validateUsername(username);
+    const accessCodeError = validateAccessCode(accessCode);
+    
+    if (usernameError || accessCodeError) {
+      setValidationErrors({
+        username: usernameError,
+        accessCode: accessCodeError
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
     try {
-      const { validateUsername } = await import('@/lib/login');
-      const error = validateUsername(value);
-      setValidationError(error);
-    } catch {
-      setValidationError(null);
+      const result = await loginUser({ username, accessCode });
+      
+      if (result.success) {
+        router.push("/town");
+      } else {
+        setError(result.error || "Login failed");
+      }
+    } catch (error) {
+      console.error("Login failed:", error);
+      setError("Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const canSubmit = username && accessCode && !validationErrors.username && !validationErrors.accessCode && !isLoading;
 
   return (
     <div className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-xl p-8 shadow-xl border border-white/20 relative z-10">
@@ -79,13 +94,13 @@ export default function LoginForm() {
         </div>
       </div>
 
-      {state?.error && (
+      {error && (
         <div className="mb-4 p-3 bg-red-500/20 text-red-100 rounded-md text-sm">
-          {state.error}
+          {error}
         </div>
       )}
 
-      <form action={formAction} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label
             htmlFor="username"
@@ -109,11 +124,12 @@ export default function LoginForm() {
               minLength={5}
               maxLength={25}
               pattern="^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?$"
-            /></div>
-          {validationError && (
-            <p className="text-xs text-red-400 mt-1">{validationError}</p>
-          )}
+              disabled={isLoading}
+            />
           </div>
+          {validationErrors.username && (
+            <p className="text-xs text-red-400 mt-1">{validationErrors.username}</p>
+          )}
           <p className="text-xs text-gray-400 mt-1">
             Alphanumeric only, one dot allowed (5-25 chars)
           </p>
@@ -132,12 +148,16 @@ export default function LoginForm() {
             type="password"
             required
             value={accessCode}
-            onChange={(e) => setAccessCode(e.target.value)}
+            onChange={(e) => handleAccessCodeChange(e.target.value)}
             className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
             placeholder="••••••"
             maxLength={6}
             pattern="[0-9]{6}"
+            disabled={isLoading}
           />
+          {validationErrors.accessCode && (
+            <p className="text-xs text-red-400 mt-1">{validationErrors.accessCode}</p>
+          )}
           <p className="text-xs text-gray-400 mt-1">
             6-digit numeric code from your invitation
           </p>
@@ -145,14 +165,19 @@ export default function LoginForm() {
 
         <button
           type="submit"
-          disabled={
-            !username || !accessCode || !!validationError
-          }
+          disabled={!canSubmit}
           className="w-full bg-cyan-500 text-white py-2.5 px-4 rounded-lg font-medium
                    hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2
                    transition-all duration-200 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Enter Playground
+          {isLoading ? (
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Accessing...</span>
+            </div>
+          ) : (
+            "Enter Playground"
+          )}
         </button>
       </form>
 
