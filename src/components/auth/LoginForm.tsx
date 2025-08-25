@@ -13,8 +13,8 @@ const initialState: ActionResult = {
 };
 
 export default function LoginForm() {
-  const [username, setUsername] = useState('');
-  const [accessCode, setAccessCode] = useState('');
+  const [username, setUsername] = useState("");
+  const [accessCode, setAccessCode] = useState("");
 
   const router = useRouter();
   const [state, formAction] = useActionState(
@@ -23,16 +23,16 @@ export default function LoginForm() {
         return await login(formData);
       } catch (error) {
         // Fallback to API call if server action fails
-        console.warn('Server action failed, falling back to API:', error);
-        
-        const username = formData.get('username') as string;
-        const accessCode = formData.get('accessCode') as string;
-        
+        console.warn("Server action failed, falling back to API:", error);
+
+        const username = formData.get("username") as string;
+        const accessCode = formData.get("accessCode") as string;
+
         try {
-          const response = await fetch('/api/login', {
-            method: 'POST',
+          const response = await fetch("/api/login", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({ username, accessCode }),
           });
@@ -41,18 +41,20 @@ export default function LoginForm() {
 
           if (response.ok && data.success) {
             // Set client-side auth cookie
-            document.cookie = `pb_auth=${encodeURIComponent(JSON.stringify({
-              token: `beta_${username}_${Date.now()}`,
-              model: data.user
-            }))}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=strict${process.env.NODE_ENV === 'production' ? '; secure' : ''}`;
-            
+            document.cookie = `pb_auth=${encodeURIComponent(
+              JSON.stringify({
+                token: `beta_${username}_${Date.now()}`,
+                model: data.user,
+              }),
+            )}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=strict${process.env.NODE_ENV === "production" ? "; secure" : ""}`;
+
             return { success: true };
           } else {
-            return { success: false, error: data.error || 'Login failed' };
+            return { success: false, error: data.error || "Login failed" };
           }
         } catch (apiError) {
-          console.error('API fallback failed:', apiError);
-          return { success: false, error: 'Login failed. Please try again.' };
+          console.error("API fallback failed:", apiError);
+          return { success: false, error: "Login failed. Please try again." };
         }
       }
     },
@@ -99,7 +101,7 @@ export default function LoginForm() {
 
       <div className="flex mb-6">
         <div className="flex-1 py-2 text-center text-white border-b-2 border-white font-medium">
-          Access Portal
+          Playgr0und Access
         </div>
       </div>
 
@@ -166,7 +168,9 @@ export default function LoginForm() {
 
         <button
           type="submit"
-          disabled={!username || !accessCode || validateUsername(username) !== null}
+          disabled={
+            !username || !accessCode || validateUsername(username) !== null
+          }
           className="w-full bg-cyan-500 text-white py-2.5 px-4 rounded-lg font-medium
                    hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2
                    transition-all duration-200 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
