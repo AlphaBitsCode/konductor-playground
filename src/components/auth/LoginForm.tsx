@@ -19,7 +19,42 @@ export default function LoginForm() {
   const router = useRouter();
   const [state, formAction] = useActionState(
     async (_: ActionResult, formData: FormData) => {
-      return await login(formData);
+      try {
+        return await login(formData);
+      } catch (error) {
+        // Fallback to API call if server action fails
+        console.warn('Server action failed, falling back to API:', error);
+        
+        const username = formData.get('username') as string;
+        const accessCode = formData.get('accessCode') as string;
+        
+        try {
+          const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, accessCode }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            // Set client-side auth cookie
+            document.cookie = `pb_auth=${encodeURIComponent(JSON.stringify({
+              token: `beta_${username}_${Date.now()}`,
+              model: data.user
+            }))}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=strict${process.env.NODE_ENV === 'production' ? '; secure' : ''}`;
+            
+            return { success: true };
+          } else {
+            return { success: false, error: data.error || 'Login failed' };
+          }
+        } catch (apiError) {
+          console.error('API fallback failed:', apiError);
+          return { success: false, error: 'Login failed. Please try again.' };
+        }
+      }
     },
     initialState,
   );

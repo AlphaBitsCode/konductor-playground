@@ -89,8 +89,8 @@ export async function login(formData: FormData): Promise<ActionResult> {
   }
 
   try {
-    // Find user by username and verify access code
-    const records = await pb.collection('earlyAccess').getList(1, 1, {
+    // Find user by username and verify access code in the users collection
+    const records = await pb.collection('users').getList(1, 1, {
       filter: `username = "${username}" && betaAccessCode = "${accessCode}"`,
     });
 
@@ -100,12 +100,9 @@ export async function login(formData: FormData): Promise<ActionResult> {
 
     const userRecord = records.items[0];
 
-    // Create or authenticate user account
-    // For now, we'll create a simple authentication token
-    // In a full implementation, you might want to create a proper user session
-
     // Set auth cookie with user data
-    cookies().set('pb_auth', JSON.stringify({
+    const cookieStore = await cookies();
+    cookieStore.set('pb_auth', JSON.stringify({
       token: `beta_${username}_${Date.now()}`, // Simple token generation
       model: {
         id: userRecord.id,
@@ -113,7 +110,7 @@ export async function login(formData: FormData): Promise<ActionResult> {
         email: userRecord.email,
         verified: true,
         betaAccessCode: userRecord.betaAccessCode,
-        waitlistNumber: userRecord.waitlistNumber
+        waitlistNumber: userRecord.meta?.waitlist_number || null
       }
     }), {
       httpOnly: true,

@@ -17,6 +17,8 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null); // State for login errors
+  const [showCrypticMessage, setShowCrypticMessage] = useState(false); // State for cryptic success message
 
   // Function to open the login popup
   const openPopup = () => {
@@ -40,28 +42,62 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
   };
 
   // Handle login form submission
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!loginUsername || !loginPassword || isLoggingIn) {
+      return;
+    }
+
+    // Validate username format before attempting login
+    const usernameValidationError = validateUsername(loginUsername);
+    if (usernameValidationError) {
+      setLoginError(usernameValidationError);
+      return;
+    }
+
     setIsLoggingIn(true);
+    setLoginError(null);
 
-    // Simulate API call or validation
-    setTimeout(() => {
-      const isValidUsername =
-        loginUsername.length >= 5 &&
-        loginUsername.length <= 25 &&
-        /^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?$/.test(loginUsername);
-      const isValidPassword = loginPassword.length > 0; // Basic password check
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          username: loginUsername, 
+          accessCode: loginPassword 
+        }),
+      });
 
-      if (isValidUsername && isValidPassword) {
-        // Successful login
-        alert("Access Granted! Welcome, Agent.");
-        closePopup();
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Set client-side auth cookie
+        document.cookie = `pb_auth=${encodeURIComponent(JSON.stringify({
+          token: `beta_${loginUsername}_${Date.now()}`,
+          model: data.user
+        }))}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=strict${process.env.NODE_ENV === 'production' ? '; secure' : ''}`;
+
+        // Show cryptic success message briefly
+        setLoginError(null);
+        setShowCrypticMessage(true);
+
+        // Redirect to town after brief delay
+        setTimeout(() => {
+          window.location.href = '/town';
+        }, 2000);
       } else {
-        // Failed login
-        alert("Access Denied. Check your credentials.");
+        setLoginError(data.error || "Access denied. Invalid credentials or insufficient clearance level.");
       }
+
+    } catch (error) {
+      console.error('Login error:', error);
+      setLoginError("Connection failed. Network protocols may be compromised.");
+    } finally {
       setIsLoggingIn(false);
-    }, 1500);
+    }
   };
 
   // Validate username format
@@ -230,7 +266,7 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
                     const target = e.target as HTMLInputElement;
                     const validationError = validateUsername(target.value);
                     setLoginUsername(target.value);
-                    // Optionally display validation error feedback here
+                    setLoginError(validationError); // Show validation error immediately
                   }}
                   placeholder="enter_designation"
                   className="w-full px-4 py-3 bg-slate-800 border-2 border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none transition-colors duration-200"
@@ -261,6 +297,12 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
                 />
               </div>
 
+              {loginError && (
+                <p className="pixel-font text-red-500 text-sm text-center">
+                  {loginError}
+                </p>
+              )}
+
               <div className="flex space-x-3 mt-6">
                 <button
                   type="button"
@@ -272,7 +314,7 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
                 </button>
                 <button
                   type="submit"
-                  disabled={!loginUsername || !loginPassword || isLoggingIn}
+                  disabled={!loginUsername || !loginPassword || isLoggingIn || !!validateUsername(loginUsername)}
                   className="flex-1 pixel-font text-sm px-4 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoggingIn ? (
@@ -286,6 +328,14 @@ export const SlidingDoor = ({ scrollY }: SlidingDoorProps) => {
                 </button>
               </div>
             </form>
+
+            {showCrypticMessage && (
+              <div className="mt-6 text-center">
+                <p className="pixel-font text-lg text-cyan-400">
+                  ACCESS GRANTED. WELCOME, AGENT.
+                </p>
+              </div>
+            )}
 
             <div className="mt-6 text-center">
               <p className="text-xs text-gray-500 font-mono">
