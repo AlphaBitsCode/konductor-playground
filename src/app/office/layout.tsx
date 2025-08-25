@@ -44,11 +44,8 @@ export default function OfficeLayout({
 
   return (
     <div className="min-h-screen flex flex-col transition-colors duration-300 bg-gradient-to-br dark:from-slate-900 dark:via-purple-900 dark:to-slate-900 from-stone-200 via-amber-50 to-stone-300">
-      {/* Sidebar Component */}
-      <Sidebar theme={theme} />
-
-      {/* Main content - positioned at bottom */}
-      <main className="flex-1 w-full mt-auto dark:bg-gradient-to-br dark:from-slate-800/30 dark:to-purple-900/20 bg-gradient-to-br from-stone-50 to-amber-50/30">
+      {/* Main content - positioned at top */}
+      <main className="flex-1 w-full dark:bg-gradient-to-br dark:from-slate-800/30 dark:to-purple-900/20 bg-gradient-to-br from-stone-50 to-amber-50/30">
         {children}
       </main>
 
