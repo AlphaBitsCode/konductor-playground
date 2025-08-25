@@ -69,63 +69,70 @@ export async function signup(formData: FormData): Promise<ActionResult> {
 }
 
 export async function login(formData: FormData): Promise<ActionResult> {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const username = formData.get('username') as string;
+  const accessCode = formData.get('accessCode') as string;
+
+  if (!username || !accessCode) {
+    return { success: false, error: 'Username and access code are required' };
+  }
+
+  // Validate username format
+  const usernameRegex = /^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?$/;
+  if (username.length < 5 || username.length > 25 || !usernameRegex.test(username)) {
+    return { success: false, error: 'Invalid username format' };
+  }
+
+  // Validate access code format (6-digit numeric)
+  const accessCodeRegex = /^[0-9]{6}$/;
+  if (!accessCodeRegex.test(accessCode)) {
+    return { success: false, error: 'Access code must be 6 digits' };
+  }
 
   try {
-    const authData = await pb
-      .collection("users")
-      .authWithPassword(email, password);
-
-    const { token, record: model } = authData;
-    
-    // Check if email is verified
-    if (!model.verified) {
-      return {
-        success: false,
-        error: "Please verify your email address before signing in. Check your inbox for a verification link.",
-      };
-    }
-
-    const cookie = JSON.stringify({ token, model });
-    const cookieStore = await cookies();
-
-    cookieStore.set("pb_auth", cookie, {
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      sameSite: "lax",
-      httpOnly: true,
+    // Find user by username and verify access code
+    const records = await pb.collection('earlyAccess').getList(1, 1, {
+      filter: `username = "${username}" && betaAccessCode = "${accessCode}"`,
     });
 
-    // Instead of redirecting immediately, return a success value
-    return { success: true };
-  } catch (error) {
-    if (error instanceof ClientResponseError) {
-      if (error.status === 400) {
-        return {
-          success: false,
-          error: "Invalid email or password",
-        };
-      }
-
-      if (error.status === 0) {
-        return {
-          success: false,
-          error:
-            "Unable to connect to PocketBase. Please ensure the server is running.",
-        };
-      }
-
-      return {
-        success: false,
-        error: `Login failed: ${error.message}`,
-      };
+    if (records.items.length === 0) {
+      return { success: false, error: 'Invalid username or access code' };
     }
 
-    return {
-      success: false,
-      error: "Something went wrong. Please try again later.",
-    };
+    const userRecord = records.items[0];
+
+    // Create or authenticate user account
+    // For now, we'll create a simple authentication token
+    // In a full implementation, you might want to create a proper user session
+
+    // Set auth cookie with user data
+    cookies().set('pb_auth', JSON.stringify({
+      token: `beta_${username}_${Date.now()}`, // Simple token generation
+      model: {
+        id: userRecord.id,
+        username: userRecord.username,
+        email: userRecord.email,
+        verified: true,
+        betaAccessCode: userRecord.betaAccessCode,
+        waitlistNumber: userRecord.waitlistNumber
+      }
+    }), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/'
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Login error:', error);
+
+    // Handle specific PocketBase errors
+    if (error?.status === 400) {
+      return { success: false, error: 'Invalid username or access code' };
+    }
+
+    return { success: false, error: 'Login failed. Please try again.' };
   }
 }
 

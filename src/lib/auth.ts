@@ -25,12 +25,35 @@ export function useAuth() {
     // Check if user is authenticated
     const checkAuth = () => {
       try {
+        // Check for our custom auth cookie
+        if (typeof document !== 'undefined') {
+          const cookies = document.cookie.split(';');
+          const authCookie = cookies.find(cookie => cookie.trim().startsWith('pb_auth='));
+          
+          if (authCookie) {
+            const authData = JSON.parse(decodeURIComponent(authCookie.split('=')[1]));
+            if (authData.token && authData.model) {
+              setUser({
+                id: authData.model.id,
+                email: authData.model.email,
+                name: authData.model.username,
+                verified: authData.model.verified || true,
+                avatar: authData.model.avatar,
+                created: authData.model.created || new Date().toISOString(),
+                updated: authData.model.updated || new Date().toISOString(),
+              });
+              return;
+            }
+          }
+        }
+
+        // Fallback to PocketBase auth store
         if (pb.authStore.isValid && pb.authStore.model) {
           const model = pb.authStore.model as RecordModel;
           setUser({
             id: model.id,
             email: model.email,
-            name: model.name,
+            name: model.name || model.username,
             verified: model.verified,
             avatar: model.avatar,
             created: model.created,
@@ -104,6 +127,32 @@ export async function getServerAuth() {
 // Auth status checker for client components
 export function checkAuthStatus() {
   try {
+    // Check for our custom auth cookie first
+    if (typeof document !== 'undefined') {
+      const cookies = document.cookie.split(';');
+      const authCookie = cookies.find(cookie => cookie.trim().startsWith('pb_auth='));
+      
+      if (authCookie) {
+        const authData = JSON.parse(decodeURIComponent(authCookie.split('=')[1]));
+        if (authData.token && authData.model) {
+          return {
+            isAuthenticated: true,
+            isVerified: authData.model.verified || true,
+            user: {
+              id: authData.model.id,
+              email: authData.model.email,
+              name: authData.model.username,
+              verified: authData.model.verified || true,
+              avatar: authData.model.avatar,
+              created: authData.model.created || new Date().toISOString(),
+              updated: authData.model.updated || new Date().toISOString(),
+            } as User
+          };
+        }
+      }
+    }
+
+    // Fallback to PocketBase auth store
     if (pb.authStore.isValid && pb.authStore.model) {
       const model = pb.authStore.model as RecordModel;
       return {
@@ -112,7 +161,7 @@ export function checkAuthStatus() {
         user: {
           id: model.id,
           email: model.email,
-          name: model.name,
+          name: model.name || model.username,
           verified: model.verified,
           avatar: model.avatar,
           created: model.created,
